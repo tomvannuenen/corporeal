@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# This shell script, having chmod +x (executable) and no .sh extension
+# it can been clicked in a File Manager (Finder or Path Finder) to invoke execution
+
+echo "---------------------------------------------------------------------------" 
+echo "Start at $(date)"
+
+# When the shell script gets invoked through a File Manager click, we must first
+# set the current working directory to the directory containing the shell script.
+# Otherwise, the current directory will be the home directory of the invoking user.
+cd $(dirname $0)
+# Show current working directory (-P option yields physical location w/o symbolic links)
+# Here the output of the pwd command is first assigned to an environment variable
+# to be able to display it at end of a single echo line
+workdir=$(pwd -P)
+echo "Working directory is: $workdir"
+
+# We should have Python V3.3.3 from the expected MacPorts installation
+# Here we want the requested 'Pyton -V' output to get it into an environment variable
+# However, the Python result is not going to stdout, so use the stderr to stdout
+# redirection by the additional @>&1 pipe
+pyver=$(python -V 2>&1)
+echo "Installed Python version is: $pyver"
+echo "---------------------------------------------------------------------------"
+#################################################################################
+
+# Now call python to run the script with the specific link to scrape
+python corporeal.py
