@@ -1,4 +1,4 @@
-CORPOREAL
+Corporeal
 ========================
 
 An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac).
@@ -13,7 +13,7 @@ Corporeal uses a few well-known Python packages. Check requirements.txt and use 
  
 Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
-CORPOREAL expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User must enter folder starting from current.
+Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User must enter folder starting from current.
 
 *E.g. "data/combi"*
 
