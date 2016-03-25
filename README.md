@@ -6,13 +6,12 @@ An interactive command-line Python package for transforming, ordering and visual
 
 <h2> Requirements </h2>
 
-Check requirements.txt. Use your favorite package installer. Pip-users may run getRequirements (.sh) from terminal to get pip to install them for them.
+Corporeal uses a few well-known Python packages. Check requirements.txt and use your favorite package manager. Pip-users (https://pypi.python.org/pypi/pip) may run getRequirements (.sh) from terminal to get pip to install the packages.
 
 
 <h2> Usage </h2>
  
-Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`.
-For those who don't like command-line manoeuvring: just click the executable (.sh). 
+Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
 CORPOREAL expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User must enter folder starting from current.
 
