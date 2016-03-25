@@ -4,6 +4,7 @@ from os import listdir
 import csv
 import re
 import numpy as np
+from numpy import linspace
 import string
 from collections import Counter
 from collections import OrderedDict
@@ -13,11 +14,16 @@ from nltk.stem.porter import *
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 from unicodedata import category
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+plt.style.use('ggplot')
 
 def main():
     print("-------------------------------")
     print("CORPOREAL 0.2, by Tom van Nuenen")
     print("-------------------------------")
+#    myDir = 'problogs/data-test'
+#    main_menu(myDir)      
     myDir = input("Please enter directory within current, containing .txt files. \nExample: data/data-folder \nIts files may be named with a hypen between subcorpus and id. \nExamples: austen-102.txt, houellebecq-1.txt, fullcorpus.txt\n>>> ")
     if os.path.isdir(myDir):
         fileList, fileNo = list_textfiles(myDir)
@@ -162,14 +168,9 @@ def get_POS_tokens(fn):
     """Get POS-tagged tokens, presented as a list, for analysis.
     The tokens are modified based on their POS."""
     # To check which tagger we're using
-    # print(nltk.tag._POS_TAGGER)
-    
+    # print(nltk.tag._POS_TAGGER)   
     # All the tags in the Penn Treebank Part-of-Speech Tagset
     # See also https://web.stanford.edu/~jurafsky/slp3/9.pdf
-    tagList = ["CC", "SYM", "CD", "TO", "DT", "UH", "EX", "VB", "FW", "VBD",
-                "IN", "VBG", "JJ", "VBN", "JJR", "VBP", "JJS", "VBZ", "LS", "WDT",
-                "MD", "WP", "NN", "WP$", "NNS", "WRB", "NNP", "$", "NNPS", "PDT",
-                "POS", "PRP", "PRP$", "RB", "RBR", "RBS", "RP"]
     with open(fn, 'r') as f:
         text = f.read()
         lowers = text.lower()
@@ -178,12 +179,8 @@ def get_POS_tokens(fn):
         pos = nltk.pos_tag(tokens)
         posTokens = []
         for tup in pos:
-            li = list(tup)
-            if li[1] in tagList:
-                index = tagList.index(li[1])
-                li[0] = li[0] + str(tagList[index])
-                posTokens.append(li[0])                
-        return posTokens
+            posTokens.append(''.join(tup))              
+    return posTokens
 
 def stem_tokens(tokens, stemmer):
     stemmed = []
@@ -191,7 +188,6 @@ def stem_tokens(tokens, stemmer):
         stemmed.append(stemmer.stem(item))
     return stemmed
             
-
 # --- MAIN FUNCTIONS ---
 
 def word_count(myDir):
@@ -318,10 +314,9 @@ def word_find(myDir):
             with open(outFile, "a", newline='') as f:
                 writer.writerow( (fName, wordCount, myWordCounter, relFreq, relFreqTotal) )
     
-    from matplotlib import pyplot as plt        
     print("Generating output figure 1...\n")
     # Output figure 1: the search word normalized to the total no. of words in the subcorpus
-    fig = plt.figure()
+    fig, ax = plt.subplots()
     N = len(relFreqList)
     x = np.arange(1, N+1)
     y = [num for num in relFreqList]
@@ -329,29 +324,37 @@ def word_find(myDir):
     width = 1
     bar1 = plt.bar(x, y, width, color="lightcoral")
     plt.ylabel("relative frequency")
-    plt.xticks(x + width, labels)
-    plt.xlim(1, len(fList) +1) 
-    fig.autofmt_xdate()
+    plt.xticks(x - 1 + width, labels, rotation='30')
+    # Set 'minor ticks' so that they are located halfway between the major ticks
+    # First, hide major tick labels
+    #ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    # Then, customize minor tick labels
+    #ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    #ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    # Auto-limiting graph to the size of the plot
+    plt.xlim(1, len(fList) + 1) 
     plt.title("Word: %s" % myWord + ", normalized to total no. words in subcorpus", fontsize=15)    
     plt.show()
     
     print("Generating output figure 2...\n")
     # Output figure 2: the search word normalized to the total no. of that word in the whole corpus    
     labels = [s for s in fList]
+
     sizes = [num for num in relFreqTotalList]
-    colors = ["yellowgreen", "gold", "lightskyblue", "lightcoral"]
-    # explode the largest number
-    explodeList = []
-    for i in relFreqTotalList:
-        if i != max(relFreqTotalList):
-            explodeList.append(0)
-        elif i == max(relFreqTotalList):
-            explodeList.append(0.1)
-    explode = tuple(explodeList)
-    plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+    colors = ["lightcoral", "yellowgreen", "gold", "lightskyblue"]
+    # if we want, we could explode the largest number
+    #explodeList = []
+    #for i in relFreqTotalList:
+    #    if i != max(relFreqTotalList):
+    #        explodeList.append(0)
+    #    elif i == max(relFreqTotalList):
+    #        explodeList.append(0.1)
+    #explode = tuple(explodeList)
+    # add explode=explode in next param
+    plt.pie(sizes, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=False, startangle=90)
     # Draw a circle at the center of pie to make it look like a donut
-    centre_circle = plt.Circle((0,0),0.4,color='black', fc='white',linewidth=1.25)
+    centre_circle = plt.Circle((0,0),0.3,color='black', fc='white',linewidth=0)
     fig = plt.gcf()
     fig.gca().add_artist(centre_circle)
     # Set aspect ratio to be equal so that pie is drawn as a circle.
@@ -361,7 +364,8 @@ def word_find(myDir):
     exit()
 
 def lexical_variety(myDir):
-    import matplotlib.pyplot as plt
+    """Calculates and visualizes mean word use and TTF scores"""
+    print("Found unsplit subcorpora in folder. If the files are big, consider splitting them using chunking")
     fileList, noFiles = list_textfiles(myDir)
     cond = 0
     while cond == 0:
@@ -383,12 +387,13 @@ def lexical_variety(myDir):
     allMeans = {}
     allTTR = {}
     tokensCond = 0
-    userTokens = input("Do you want to use [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
-    valid = ["1", "2"]
-    if userTokens in valid:
-        tokensCond = int(userTokens)
-    else:
-        print("Please try again.")
+    while tokensCond == 0:
+        userTokens = input("Do you want to use [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
+        valid = ["1", "2"]
+        if userTokens in valid:
+            tokensCond = int(userTokens)
+        else:
+            print("Please try again.")
 
     print("LEXICAL VARIETY PER FILE")
     print('%-*s %-*s %s' % (30, "File Name", 20, "Mean Word Freq", "Type-Token Ratio"))       
@@ -405,7 +410,7 @@ def lexical_variety(myDir):
         typeCounter = len(set(tokens))
         totalWordCounter += len(tokens)
         totalTypeCounter += len(set(tokens))
-        mean = tokenCounter / typeCounter
+        mean = tokenCounter / typeCounter # average times in which word types are used
         allMeans[fName] = mean
         TTR = typeCounter / tokenCounter
         allTTR[fName] = TTR
@@ -413,68 +418,52 @@ def lexical_variety(myDir):
         if cond == 2:
             with open(outFile, "a", newline='') as f:
                 writer.writerow( (fName, mean, TTR*100) )
-    # Calculate total means based on the counting we've been doing
+    # Calculate total mean value based on the counting we've been doing
     totalMeans = totalWordCounter / totalTypeCounter
-    # Dict comprehension to normalize values
-    allMeans = {key:totalMeans-value for key, value in allMeans.items()} 
-    cond = 0
-    while cond == 0:
-        userGraph = input("Do you want to sort graph output by [1] values, [2] subcorpus name or [3] both?\n>>>")
-        valid = ["1", "2", "3"]
-        if userGraph in valid:
-            if userGraph == "1":
-                cond = 1
-            elif userGraph == "2":
-                cond = 2
-            elif userGraph == "3":
-                cond = 3
-        else:
-            print("Try again please")
-    if cond == 1 or cond == 3:    
-        # Plotting means, sorted by values
-        fig = plt.figure()
-        sortedMeans = OrderedDict(sorted(allMeans.items(), key=lambda t: t[1]))
-        plt.bar(range(len(sortedMeans)), sortedMeans.values(), align='center')
-        plt.xticks(range(len(sortedMeans)), sortedMeans.keys())
-        plt.xlim(-1, len(sortedMeans))
-        fig.autofmt_xdate()
-        plt.title("Lexical repetitiveness by mean word use per file, ordered by value", fontsize=14, y=1.03)    
-        plt.show()
+    # Dict comprehension to normalize values, subtracting total mean from the mean of every text
+    allMeans = {key:value-totalMeans for key, value in allMeans.items()} 
+    
+    # Plotting means, sorted by values
+    fig, ax = plt.subplots()
+    sortedMeans = OrderedDict(sorted(allMeans.items(), key=lambda t: t[1]))
+    N = len(sortedMeans)
+    x = np.arange(1, N+1)
+    y = [num for num in sortedMeans.values()]
+    labels = sorted(allMeans, key=allMeans.get, reverse=False)
+    width = 1
+    bar1 = plt.bar(x, y, width, color="lightcoral")
+    plt.ylabel("mean word use")
+    # Hide major format
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    # Insert minor format
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    plt.xlim(1, len(sortedMeans) +1)
+    plt.title("Lexical repetitiveness by normalized mean word use per file, ordered by value", fontsize=14, y=1.03)    
+    plt.show()
 
-        # Plotting TTF, sorted by values
-        fig = plt.figure()
-        sortedTTR = OrderedDict(sorted(allTTR.items(), key=lambda t: t[1]))
-        plt.bar(range(len(sortedTTR)), sortedTTR.values(), align='center')
-        plt.xticks(range(len(sortedTTR)), sortedTTR.keys())
-        plt.xlim(-1, len(sortedTTR))
-        fig.autofmt_xdate()
-        plt.title("Lexical variety by TTF score per file, ordered by value", fontsize=14, y=1.03)    
-        plt.show()
-        
-    if cond == 2 or cond == 3: 
-        # Plotting means, sorted by keys    
-        fig = plt.figure()
-        sortedMeans = OrderedDict(sorted(allMeans.items(), key=lambda t: t[0]))
-        plt.bar(range(len(sortedMeans)), sortedMeans.values(), align='center')
-        plt.xticks(range(len(sortedMeans)), sorted(list(sortedMeans.keys())))
-        plt.xlim(-1, len(sortedMeans))
-        fig.autofmt_xdate()
-        plt.title("Lexical reptitiveness by mean word use per file, sorted by subcorpus", fontsize=14, y=1.03)    
-        plt.show()
-
-        # Plotting TTF, sorted by keys    
-        fig = plt.figure()
-        sortedTTR = OrderedDict(sorted(allTTR.items(), key=lambda t: t[0]))
-        plt.bar(range(len(sortedTTR)), sortedTTR.values(), align='center')
-        plt.xticks(range(len(sortedTTR)), sorted(list(sortedTTR.keys())))
-        plt.xlim(-1, len(sortedTTR))
-        fig.autofmt_xdate()
-        plt.title("Lexical variety by TTF score per file, sorted by subcorpus", fontsize=14, y=1.03)    
-        plt.show()
+    # Plotting TTR, sorted by values
+    fig, ax = plt.subplots()
+    sortedTTR = OrderedDict(sorted(allTTR.items(), key=lambda t: t[1]))
+    N = len(sortedTTR)
+    x = np.arange(1, N+1)
+    y = [num for num in sortedTTR.values()]
+    labels = sorted(allTTR, key=allTTR.get, reverse=False)
+    width = 1
+    bar1 = plt.bar(x, y, width, color="lightcoral")
+    plt.ylabel("TTR")
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    plt.xlim(1, len(sortedTTR) +1)
+    plt.title("Lexical variety by TTR value per file, ordered by value", fontsize=14, y=1.03)    
+    plt.show()
     exit()
     
 def lexical_variety_split(myDir):
-    import matplotlib.pyplot as plt
+    """Calculates and visualizes mean word use and TTF scores. The parts of the subcorps
+    are organized per subcorpus"""
+    print("Found split subcorpora in folder. Will concatenate for evaluation.")
     fileList, noFiles = list_textfiles(myDir)
     cond = 0
     while cond == 0:
@@ -552,62 +541,41 @@ def lexical_variety_split(myDir):
     # Calculate total means
     totalMeans = totalWordCounter / totalTypeCounter
     # Dict comprehension to normalize values, recalculating meansDict
-    meansDict = {key:totalMeans-value for key, value in meansDict.items()}
-    # Ask for user input
-    cond = 0
-    while cond == 0:
-        userGraph = input("Do you want to sort graph output by [1] values, by [2] subcorpus name or [3] both?\n>>> ")
-        valid = ["1", "2", "3"]
-        if userGraph in valid:
-            if userGraph == "1":
-                cond = 1
-            elif userGraph == "2":
-                cond = 2
-            elif userGraph == "3":
-                cond = 3               
-        else:
-            print("Try again please")
-    if cond == 1 or cond == 3:
-        # Plotting means, sorted by values
-        fig = plt.figure()
-        sortedMeans = OrderedDict(sorted(meansDict.items(), key=lambda t: t[1]))
-        plt.bar(range(len(sortedMeans)), sortedMeans.values(), align='center')
-        plt.xticks(range(len(sortedMeans)), sortedMeans.keys())
-        plt.xlim(-1, len(sortedMeans))
-        fig.autofmt_xdate()
-        plt.title("Lexical repetitiveness by mean word use per subcorpus, ordered by value", fontsize=14, y=1.03)    
-        plt.show()
-    
-        # Plotting TTF, sorted by values
-        fig = plt.figure()
-        sortedTTR = OrderedDict(sorted(TTRDict.items(), key=lambda t: t[1]))
-        plt.bar(range(len(sortedTTR)), sortedTTR.values(), align='center')
-        plt.xticks(range(len(sortedTTR)), sortedTTR.keys())
-        plt.xlim(-1, len(sortedTTR))
-        fig.autofmt_xdate()
-        plt.title("Lexical variety by TTF score per subcorpus, ordered by value", fontsize=14, y=1.03)    
-        plt.show()
+    meansDict = {key:value-totalMeans for key, value in meansDict.items()}
+
+    # Plotting means, sorted by values
+    fig, ax = plt.subplots()
+    sortedMeans = OrderedDict(sorted(meansDict.items(), key=lambda t: t[1]))
+    N = len(sortedMeans)
+    x = np.arange(1, N+1)
+    y = [num for num in sortedMeans.values()]
+    labels = sorted(meansDict, key=meansDict.get, reverse=False)
+    width = 1
+    bar1 = plt.bar(x, y, width, color="lightcoral")
+    plt.ylabel("mean word use")
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    plt.xlim(1, len(sortedMeans) +1)
+    plt.title("Lexical repetitiveness by normalized mean word use per subcorpus, ordered by value", fontsize=14, y=1.03)    
+    plt.show()
         
-    if cond == 2 or cond == 3:
-        # Plotting means, sorted by keys    
-        fig = plt.figure()
-        sortedMeans = OrderedDict(sorted(meansDict.items(), key=lambda t: t[0]))
-        plt.bar(range(len(sortedMeans)), sortedMeans.values(), align='center')
-        plt.xticks(range(len(sortedMeans)), sorted(list(sortedMeans.keys())))
-        plt.xlim(-1, len(sortedMeans))
-        fig.autofmt_xdate()
-        plt.title("Lexical repetitiveness by mean word use per subcorpus, ordered by names", fontsize=14, y=1.03)    
-        plt.show()
-    
-        # Plotting TTF, sorted by keys    
-        fig = plt.figure()
-        sortedTTR = OrderedDict(sorted(TTRDict.items(), key=lambda t: t[0]))
-        plt.bar(range(len(sortedTTR)), sortedTTR.values(), align='center')
-        plt.xticks(range(len(sortedTTR)), sorted(list(sortedTTR.keys())))
-        plt.xlim(-1, len(sortedTTR))
-        fig.autofmt_xdate()
-        plt.title("Lexical variety by TTF score per subcorpus, ordered by names", fontsize=14, y=1.03)    
-        plt.show()   
+    # Plotting TTF, sorted by values
+    fig, ax = plt.subplots()
+    sortedTTR = OrderedDict(sorted(TTRDict.items(), key=lambda t: t[1]))
+    N = len(sortedTTR)
+    x = np.arange(1, N+1)
+    y = [num for num in sortedTTR.values()]
+    labels = sorted(TTRDict, key=TTRDict.get, reverse=False)
+    width = 1
+    bar1 = plt.bar(x, y, width, color="lightcoral")
+    plt.ylabel("TTR")
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    plt.xlim(1, len(sortedTTR) +1)
+    plt.title("Lexical repetitiveness by TTR score per subcorpus, ordered by value", fontsize=14, y=1.03)    
+    plt.show()
     exit()
 
 def listFromAuthor(author, fileList):
@@ -712,7 +680,6 @@ def distinctive(myDir):
             userNameIndices.append(index)
         else:
             otherNamesIndices.append(index)
-
     userNameRates = rates[userNameIndices, :]
     otherNamesRates = rates[otherNamesIndices, :]        
     userNameRatesAvg = np.mean(userNameRates, axis=0)
@@ -723,25 +690,20 @@ def distinctive(myDir):
     dtm = dtm[:, np.invert(distinctive_indices)]
     rates = rates[:, np.invert(distinctive_indices)]
     vocab = vocab[np.invert(distinctive_indices)]
-
     # recalculate variables that depend on rates
     userNameRates = rates[userNameIndices, :]
     otherNamesRates = rates[otherNamesIndices, :]
     userNameRatesAvg = np.mean(userNameRates, axis=0)
     otherNamesRatesAvg = np.mean(otherNamesRates, axis=0)
-    
     keyness = np.abs(userNameRatesAvg - otherNamesRatesAvg)
     ranking = np.argsort(keyness)[::-1]  # from highest to lowest; [::-1] reverses order
-
     rates_avg = np.mean(rates, axis=0)
     keyness = np.abs(userNameRatesAvg - otherNamesRatesAvg) / rates_avg
     ranking = np.argsort(keyness)[::-1]  # from highest to lowest; [::-1] reverses order.
-
     topKeyness = [i for i in keyness[ranking][0:int(userNo)]]
     topVocab = [i for i in vocab[ranking][0:int(userNo)]]
     d = dict(zip(topVocab, topKeyness))
-
-    print("TOP " + userNo + " DISTINCTIVE WORDS PER SUBCORPUS '" + str(userName) + "' BY COMPARING AVG RATES")     
+    print("TOP " + userNo + " DISTINCTIVE WORDS PER SUBCORPUS '" + str(userName).upper() + "' BY COMPARING AVG RATES")     
     print("%-*s %s" % (20, "Word", "Keyness"))
     for k, v in d.items():
         print("%-*s %f" % (20, k, v))
