@@ -11,7 +11,7 @@ Check requirements.txt. Use your favorite package installer. Pip-users may run g
 
 <h2> Usage </h2>
  
-Navigate to the folder Corporeal is installed in in terminal, and enter `<python corporeal.py>`.
+Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`.
 For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
 CORPOREAL expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User must enter folder starting from current.
