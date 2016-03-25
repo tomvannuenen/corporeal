@@ -4,7 +4,7 @@ CORPOREAL
 An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 on mac.
 
 
---- Requirements ---
+<h2> Requirements </h2>
 
 Makes use of the following python modules:
 numpy, nltk, sklearn, matplotlib, scipy
