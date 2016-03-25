@@ -45,7 +45,6 @@ Calculates and visualizes mean word use and TTF scores. User can choose to make 
 - The Type-Token Ratio (TTR) score, i.e. the amount of word types dividied by the amount of word tokens, and its result multiplied by 100.
 - Bar chart output of compared means and TTR scores per subcorpus. 
 Note that lexical variety will always be lower if the texts are longer: only if the input corpus consists of files of roughly the same size, some degree of comparison might be possible. If input files are of a significantly different size, chunking up front is recommended.
-User is also asked for sortation for bar chart output, ordered by either values (from small to large) or names (alphabetically). 
 Computation depends on input: if user inputs list of sperarately names subcorpora (e.g. "austen.txt" and "james.txt"), the script goes through those files; if the user inputs list of chunked subcorpora (e.g. "austen-1" to "austen-100" and "james-1" to "james-100"), the script sorts the files per subcorpora.
 
 STEMMING
