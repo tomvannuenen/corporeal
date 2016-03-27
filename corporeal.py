@@ -44,27 +44,32 @@ def main_menu(myDir):
     fileList, noFiles = list_textfiles(myDir)
     print("--------------MAIN MENU--------------")
     userInput = input("""Please select:
-    [0] for chunking
-    [1] for word count
-    [2] for top words 
-    [3] for word finder
-    [4] for lexical variety (means and TTR)
-    [5] for stemming
-    [6] for POS tagging
-    [7] for distinctive words
-    [8] for Euclidian distances
-    [9] for TF-IDF cosine distances
+    [1] for chunking
+    [2] for stemming
+    [3] for POS tagging
+    [4] for word count
+    [5] for top words 
+    [6] for word finder
+    [7] for lexical variety (means and TTR)
+    [8] for distinctive words
+    [9] for Euclidian distances
+    [10] for TF-IDF cosine distances
     [x] to exit \n>>> """)
+#   [4] for lemmatization
 
-    if userInput == "0":
-        chunking(myDir)
     if userInput == "1":
+        chunking(myDir)
+    elif userInput == "2":
+        stemmer(myDir)
+    elif userInput == "3":
+        tagger(myDir)
+    if userInput == "4":
         word_count(myDir)
-    elif userInput == "2":    
+    elif userInput == "5":    
         top_words(myDir)
-    elif userInput == "3":    
+    elif userInput == "6":    
         word_find(myDir)
-    elif userInput == "4":
+    elif userInput == "7":
         # If the user is using split files, we go to a different function
         for f in fileList:
             author = f.split("/")[-1]
@@ -72,15 +77,11 @@ def main_menu(myDir):
                 lexical_variety_split(myDir)
             else:
                 lexical_variety(myDir)
-    elif userInput == "5":
-        stemmer(myDir)
-    elif userInput == "6":
-        tagger(myDir)
-    elif userInput == "7":
-        distinctive(myDir)
     elif userInput == "8":
-        euclidian(myDir)
+        distinctive(myDir)
     elif userInput == "9":
+        euclidian(myDir)
+    elif userInput == "10":
         cosine(myDir)
     elif userInput == "x" or "X":
         exit()
@@ -108,6 +109,70 @@ def read_file(filename):
     infile.close()
     return contents
 
+def split_text(filePath, n_words):    
+    """Split text into chunks. Used in chunking function"""
+    tokens = get_tokens(filePath)  
+    chunks = []
+    current_chunk_words = []
+    current_chunk_word_count = 0
+    for word in tokens:
+        current_chunk_words.append(word)
+        current_chunk_word_count += 1
+        if current_chunk_word_count == n_words:
+            chunks.append(' '.join(current_chunk_words))
+            current_chunk_words = []
+            current_chunk_word_count = 0
+    chunks.append(' '.join(current_chunk_words) )        
+    return chunks
+
+def get_tokens(fn):
+    """Get tokens, presented as a list, for analysis"""
+    with open(fn, 'r') as f:
+        text = f.read()
+        lowers = text.lower()
+        no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
+        # Another way of removing punct, but only works for ASCII
+        # no_punctuation = lowers.translate(string.punctuation)
+        tokens = no_punctuation.split()
+        # SHOULD I REMOVE DIACRITICS? HOW?
+        # Another way of tokenizing, seems less optimal
+        # tokens = nltk.word_tokenize(lowers)
+        return tokens
+
+def get_POS_tokens(fn):
+    """Get POS-tagged tokens, presented as a list, for analysis.
+    The tokens are modified based on their POS."""
+    # To check which tagger we're using
+    # print(nltk.tag._POS_TAGGER)   
+    # For info about the tags see https://web.stanford.edu/~jurafsky/slp3/9.pdf
+    with open(fn, 'r') as f:
+        text = f.read()
+        lowers = text.lower()
+        no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
+        tokens = no_punctuation.split()
+        pos = nltk.pos_tag(tokens)
+        posTokens = []
+        for tup in pos:
+            posTokens.append(''.join(tup))              
+    return posTokens
+
+def stem_tokens(tokens, stemmer):
+    stemmed = []
+    for item in tokens:
+        stemmed.append(stemmer.stem(item))
+    return stemmed
+
+def listFromAuthor(author, fileList):
+    myDict = {}
+    myDict[author] = []  
+    for filePath in fileList:
+        j = filePath.split("/")[-1].split("-")[0]
+        if j == author:
+            myDict[author].append(filePath)
+    return myDict[author]
+            
+# --- MAIN FUNCTIONS ---
+
 def chunking(myDir):
     """Copy text file into new folder with chunks of that text.
     Size of the chunks is determined by user."""
@@ -134,63 +199,124 @@ def chunking(myDir):
                           "{}{:04d}".format(basename, chunk['number']) + '.txt')
         with open(fn, 'w') as f:
             f.write(str(chunk['text']))
+    print("Done! Exiting...")
+    exit()
+            
+def stemmer(myDir):
+    """Stems words. Creates directory in current directory with stemmed texts, or a single .csv file with top 100 stemmed words."""
+    fileList, noFiles = list_textfiles(myDir)
+    condOut = 0
+    userFile = input("""Do you want [1] a .csv file with top stemmed counts or [2] .txt files with\nstemmed texts (useable as input for other functions)?\n>>> """)
+    valid = ["1", "2"]
+    while condOut == 0:
+        if userFile == "1":
+            condOut = 1
+        elif userFile == "2": 
+            stemTXTDir = myDir + "-stemTXT"
+            if not os.path.exists(stemTXTDir):
+                os.makedirs(stemTXTDir) 
+            condOut = 2
+        else:
+            continue        
+    condStop = 0
+    userStop = input("Remove stopwords?\n>>> ").lower()
+    valid = ["yes", "y", "no", "n"]
+    while condStop == 0:
+        if userStop == "yes" or "y":
+            condStop = 1
+        elif userStop == "no" or "n": 
+            condStop = 2
+        else:
+            continue      
+    totalStemList = []
+    for filePath in fileList:
+        fSmall = os.path.split(filePath)[1] 
+        fName = os.path.splitext(fSmall)[0]
+        tokens = get_tokens(filePath)
+        filtered = [w for w in tokens if not w in stopwords.words('english')]
+        stemmer = SnowballStemmer("english")
+        if condStop == 1:
+            stemmed = stem_tokens(filtered, stemmer)
+        else:
+            stemmed = stem_tokens(tokens, stemmer)
+        text = ' '.join(stemmed)
+        totalStemList.append(stemmed)
+        if condOut == 2:
+            with open(os.curdir + "/" + stemTXTDir + "/" + fName + "-stemmed" + ".txt", "a", newline='') as f:
+                f.write(str(text))
+    realList = []
+    for l in totalStemList:
+        for i in l:
+            realList.append(i)
+    totalCount = Counter(realList)
+    top = totalCount.most_common(100)
+    if condOut == 1:
+        with open(myDir + "-stemmed" + ".csv", "a", newline='') as f:
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            for j in top:
+                writer.writerow(j)
+    print("Done! Exiting...")
+    exit()
 
-def split_text(filePath, n_words):    
-    """Split text into chunks. Used in chunking function"""
-    tokens = get_tokens(filePath)  
-    chunks = []
-    current_chunk_words = []
-    current_chunk_word_count = 0
-    for word in tokens:
-        current_chunk_words.append(word)
-        current_chunk_word_count += 1
-        if current_chunk_word_count == n_words:
-            chunks.append(' '.join(current_chunk_words))
-            current_chunk_words = []
-            current_chunk_word_count = 0
-    chunks.append(' '.join(current_chunk_words) )        
-    return chunks
-
-def get_tokens(fn):
-    """Get tokens, presented as a list, for analysis"""
-    with open(fn, 'r') as f:
-        text = f.read()
-        lowers = text.lower()
-        no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
-        # Another way of removing punct, but only works for ASCII
-        # no_punctuation = lowers.translate(string.punctuation)
-        tokens = no_punctuation.split()
-        # Another way of tokenizing, seems less optimal
-        # tokens = nltk.word_tokenize(lowers)
-        return tokens
-
-def get_POS_tokens(fn):
-    """Get POS-tagged tokens, presented as a list, for analysis.
-    The tokens are modified based on their POS."""
-    # To check which tagger we're using
-    # print(nltk.tag._POS_TAGGER)   
-    # All the tags in the Penn Treebank Part-of-Speech Tagset
-    # See also https://web.stanford.edu/~jurafsky/slp3/9.pdf
-    with open(fn, 'r') as f:
-        text = f.read()
-        lowers = text.lower()
-        no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
-        tokens = no_punctuation.split()
-        pos = nltk.pos_tag(tokens)
+def tagger(myDir):
+    """POS tags words. Creates directory in current directory with POS tagged texts, or a .csv file with top 100 tagged words."""
+    fileList, noFiles = list_textfiles(myDir)
+    condOut = 0
+    userFile = input("""Do you want [1] a .csv files with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\n>>> """)
+    valid = ["1", "2"]
+    while condOut == 0:
+        if userFile == "1":
+            condOut = 1
+        elif userFile == "2": 
+            posTXTDir = myDir + "-POS-TXT"               
+            if not os.path.exists(posTXTDir):
+                os.makedirs(posTXTDir)  
+            condOut = 2
+        else:
+            continue        
+    condStop = 0
+    userStop = input("Remove stopwords?\n>>> ").lower()
+    valid = ["yes", "y", "no", "n"]
+    while condStop == 0:
+        if userStop == "yes" or "y":
+            condStop = 1
+        elif userStop == "no" or "n": 
+            condStop = 2
+        else:
+            continue  
+    totalPOSlist = []
+    for filePath in fileList:
+        fSmall = os.path.split(filePath)[1] 
+        fName = os.path.splitext(fSmall)[0]
+        tokens = get_tokens(filePath)
+        if condStop == 1:
+            filtered = [w for w in tokens if not w in stopwords.words('english')]
+        if condStop ==2:
+            filtered = tokens
+        pos = nltk.pos_tag(filtered)
         posTokens = []
         for tup in pos:
-            posTokens.append(''.join(tup))              
-    return posTokens
-
-def stem_tokens(tokens, stemmer):
-    stemmed = []
-    for item in tokens:
-        stemmed.append(stemmer.stem(item))
-    return stemmed
-            
-# --- MAIN FUNCTIONS ---
-
+            posTokens.append(''.join(tup))
+        totalPOSlist.append(pos)
+        if condOut == 2:
+            with open(os.curdir + "/" + posTXTDir + "/" + fName + "-POS" + ".txt", "w") as f:
+                f.write(str(posText))
+    realList = []
+    for l in totalPOSlist:
+        for i in l:
+            realList.append(i)
+    totalCount = Counter(realList)    
+    totalTop = totalCount.most_common(100)
+    if condOut == 1:        
+        with open(myDir + "-POS" + ".csv", "a", newline='') as f:
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            for i in totalTop:
+                writer.writerow(i)
+    print("Done! Exiting...")
+    exit()
+    
 def word_count(myDir):
+    """Simple word count function. Prints separate and total wordcount to terminal"""
     fileList, noFiles = list_textfiles(myDir)
     print("WORD COUNTS PER FILE")
     print('%-*s %s' % (20, "Word", "Frequency"))
@@ -205,6 +331,8 @@ def word_count(myDir):
         totalWordCount += len(tokens)
     print("\nTotal word count")
     print(str(totalWordCount) + "\n")
+    print("Done! Exiting...")
+    exit()
 
 def top_words(myDir):
     """finds top N words, based on user input"""
@@ -262,6 +390,7 @@ def top_words(myDir):
         if condCSV == 2:
             with open(outFile, "a", newline='') as f:
                 writer.writerow( (word, frequency) )
+    print("Done! Exiting...")
     exit()
             
 def word_find(myDir):
@@ -361,6 +490,7 @@ def word_find(myDir):
     plt.axis('equal')
     plt.title("Word: '%s'" % myWord + ", normalized to frequency of '%s'" % myWord + " in total corpus", fontsize=15, y=1.08)    
     plt.show()    
+    print("Done! Exiting...")
     exit()
 
 def lexical_variety(myDir):
@@ -458,6 +588,7 @@ def lexical_variety(myDir):
     plt.xlim(1, len(sortedTTR) +1)
     plt.title("Lexical variety by TTR value per file, ordered by value", fontsize=14, y=1.03)    
     plt.show()
+    print("Done! Exiting...")
     exit()
     
 def lexical_variety_split(myDir):
@@ -576,58 +707,9 @@ def lexical_variety_split(myDir):
     plt.xlim(1, len(sortedTTR) +1)
     plt.title("Lexical repetitiveness by TTR score per subcorpus, ordered by value", fontsize=14, y=1.03)    
     plt.show()
+    print("Done! Exiting...")
     exit()
 
-def listFromAuthor(author, fileList):
-    myDict = {}
-    myDict[author] = []  
-    for filePath in fileList:
-        j = filePath.split("/")[-1].split("-")[0]
-        if j == author:
-            myDict[author].append(filePath)
-    return myDict[author]
-
-def stemmer(myDir):
-    """Stems words. Creates directory in current directory with stemmed files."""
-    stemDir = myDir + "-stem"                    
-    if not os.path.exists(stemDir):
-        os.makedirs(stemDir)    
-    fileList, noFiles = list_textfiles(myDir)
-    for filePath in fileList:
-        fSmall = os.path.split(filePath)[1] 
-        fName = os.path.splitext(fSmall)[0]
-        tokens = get_tokens(filePath)
-        filtered = [w for w in tokens if not w in stopwords.words('english')]
-        stemmer = SnowballStemmer("english")
-        stemmed = stem_tokens(filtered, stemmer)
-        count = Counter(stemmed)
-        top = count.most_common(100)    
-        with open(os.curdir + "/" + stemDir + "/" + fName + "-stemmed" + ".csv", "a", newline='') as f:
-            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-            for j in top:
-                writer.writerow(j)
-    exit()
-
-def tagger(myDir):
-    """POS tags words. Creates directory in current directory with POS tagged files."""
-    posDir = myDir + "-POS"               
-    if not os.path.exists(posDir):
-        os.makedirs(posDir)  
-    fileList, noFiles = list_textfiles(myDir)
-    for filePath in fileList:
-        fSmall = os.path.split(filePath)[1] 
-        fName = os.path.splitext(fSmall)[0]
-        tokens = get_tokens(filePath)
-        filtered = [w for w in tokens if not w in stopwords.words('english')]
-        pos = nltk.pos_tag(filtered)
-        count = Counter(pos)
-        top = count.most_common(100)         
-        with open(os.curdir + "/" + posDir + "/" + fName + "-POS" + ".csv", "a", newline='') as f:
-            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-            for i in top:
-                writer.writerow(i)
-    exit()
-    
 def distinctive(myDir):
     """Compare the average rate at which words are used in (A) the user-defined subcorpus and (B) the
     rest of the corpus. We calculate the difference between the rates to calculate their
@@ -711,6 +793,7 @@ def distinctive(myDir):
             with open(outFile, "a", newline='') as f:
                 for k, v in d.items():
                     writer.writerow( (k,v) )  
+    print("Done! Exiting...")
     exit()    
     
     # Note that as of now this only works for 1 subcorpus; it might be nice to be able to
@@ -751,6 +834,7 @@ def euclidian(myDir):
     plt.tight_layout()  # fixes margins
     plt.title("Dendogram")
     plt.show()
+    print("Done! Exiting...")
     exit()
     
 def cosine(myDir):
@@ -789,6 +873,7 @@ def cosine(myDir):
     plt.tight_layout()  # fixes margins
     plt.title("Dendogram")
     plt.show()
+    print("Done! Exiting...")
     exit()
 
 if __name__ == '__main__':

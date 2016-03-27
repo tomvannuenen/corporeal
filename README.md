@@ -1,7 +1,7 @@
 Corporeal
 ========================
 
-An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac).
+An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac). Current version is pre-alpha, still under construction.
 
 
 <h2> Requirements </h2>
@@ -17,15 +17,27 @@ Corporeal expects to be placed in a folder that also contains a data folder. It 
 
 *E.g. "data/combi"*
 
-It also expects data in the data folder to be titled by subcorpus--optionally with an en-dash to separate parts of the subcorpus.
+Corporeal expects .txt data in the data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus.
 
 *E.g. "Austen.txt, James.txt" or "Austen-1.txt, Austen-112.txt, James-1.txt, James-34.txt"*
+
+Note that Corporeal expects to be used for parsing English texts (in terms of  stopword removal and tokenizing); inputting other languages may yield less desirable results.
 
 
 <h3> Features </h3>
 
 <h4>Chunking</h4>
-Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). 
+Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing.
+
+<h4>Stemming</h4>
+Stems all words per file. User selects output: 
+* One .csv file in the root folder, based on the aggregate stemmed texts, containing the top 100 words; 
+* Multiple .txt files with the stemmed texts. These stemmed texts (with their reduced inflectional word forms) may then be used as input for other functions. 
+
+<h4>POS tagging</h4>
+POS tags all words per file, outputs tagged files in a new folder. User selects output:
+* One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
+* Multiple .txt files with the tagged texts. These tagged texts (with their reduced inflectional word forms) may then be used as input for other functions. 
 
 <h4>Word count</h4>
 Runs through all files and outputs word count per file.
@@ -46,14 +58,6 @@ Calculates and visualizes mean word use and TTF scores. User can choose to make 
 * Bar chart output of compared means and TTR scores per subcorpus. 
 Note that lexical variety will always be lower if the texts are longer: only if the input corpus consists of files of roughly the same size, some degree of comparison might be possible. If input files are of a significantly different size, chunking up front is recommended.
 Computation depends on input: if user inputs list of sperarately names subcorpora (*e.g. "austen.txt" and "james.txt"*), the script goes through those files; if the user inputs list of chunked subcorpora (*e.g. "austen-1" to "austen-100" and "james-1" to "james-100"*), the script sorts the files per subcorpora.
-
-<h4>Stemming</h4>
-Stems all words per file, outputs stemmed files in a new folder named 
-"[userfolder]-stem".
-
-<h4>POS tagging</h4>
-POS tags all words per file, outputs tagged files in a new folder named 
-"[userfolder]-POS".
 
 <h4>Distinctive words</h4>
 User is asked for a subcorpus name (e.g. "Austen"), output is a list of distinctive words for that subcorpus by comparing average rates of that word in that subcorpus vs. the entire corpus. The difference between these rates is calculated as distinciveness. User can opt for a .csv file with these distinctive words. 
