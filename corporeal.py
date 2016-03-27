@@ -21,9 +21,7 @@ plt.style.use('ggplot')
 def main():
     print("-------------------------------")
     print("CORPOREAL 0.2, by Tom van Nuenen")
-    print("-------------------------------")
-#    myDir = 'problogs/data-test'
-#    main_menu(myDir)      
+    print("-------------------------------")   
     myDir = input("Please enter directory within current, containing .txt files. \nExample: data/data-folder \nIts files may be named with a hypen between subcorpus and id. \nExamples: austen-102.txt, houellebecq-1.txt, fullcorpus.txt\n>>> ")
     if os.path.isdir(myDir):
         fileList, fileNo = list_textfiles(myDir)
@@ -766,12 +764,12 @@ def distinctive(myDir):
     otherNamesRates = rates[otherNamesIndices, :]        
     userNameRatesAvg = np.mean(userNameRates, axis=0)
     otherNamesRatesAvg = np.mean(otherNamesRates, axis=0)
-    distinctive_indices = (userNameRatesAvg * otherNamesRatesAvg) == 0
-    ranking = np.argsort(userNameRatesAvg[distinctive_indices] + otherNamesRatesAvg
-                     [distinctive_indices])[::-1] # from highest to lowest; [::-1] reverses order
-    dtm = dtm[:, np.invert(distinctive_indices)]
-    rates = rates[:, np.invert(distinctive_indices)]
-    vocab = vocab[np.invert(distinctive_indices)]
+    distinctiveIndices = (userNameRatesAvg * otherNamesRatesAvg) == 0
+    ranking = np.argsort(userNameRatesAvg[distinctiveIndices] + otherNamesRatesAvg
+                     [distinctiveIndices])[::-1] # from highest to lowest; [::-1] reverses order
+    dtm = dtm[:, np.invert(distinctiveIndices)]
+    rates = rates[:, np.invert(distinctiveIndices)]
+    vocab = vocab[np.invert(distinctiveIndices)]
     # recalculate variables that depend on rates
     userNameRates = rates[userNameIndices, :]
     otherNamesRates = rates[otherNamesIndices, :]
@@ -779,8 +777,8 @@ def distinctive(myDir):
     otherNamesRatesAvg = np.mean(otherNamesRates, axis=0)
     keyness = np.abs(userNameRatesAvg - otherNamesRatesAvg)
     ranking = np.argsort(keyness)[::-1]  # from highest to lowest; [::-1] reverses order
-    rates_avg = np.mean(rates, axis=0)
-    keyness = np.abs(userNameRatesAvg - otherNamesRatesAvg) / rates_avg
+    ratesAvg = np.mean(rates, axis=0)
+    keyness = np.abs(userNameRatesAvg - otherNamesRatesAvg) / ratesAvg
     ranking = np.argsort(keyness)[::-1]  # from highest to lowest; [::-1] reverses order.
     topKeyness = [i for i in keyness[ranking][0:int(userNo)]]
     topVocab = [i for i in vocab[ranking][0:int(userNo)]]
