@@ -12,6 +12,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import *
 from nltk.stem.snowball import SnowballStemmer
+from nltk.stem.wordnet import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
 from unicodedata import category
 import matplotlib.pyplot as plt
@@ -45,15 +46,15 @@ def main_menu(myDir):
     [1] for chunking
     [2] for stemming
     [3] for POS tagging
-    [4] for word count
-    [5] for top words 
-    [6] for word finder
-    [7] for lexical variety (means and TTR)
-    [8] for distinctive words
-    [9] for Euclidian distances
-    [10] for TF-IDF cosine distances
+    [4] for lemmatization
+    [5] for word count
+    [6] for top words 
+    [7] for word finder
+    [8] for lexical variety (means and TTR)
+    [9] for distinctive words
+    [10] for Euclidian distances
+    [11] for TF-IDF cosine distances
     [x] to exit \n>>> """)
-#   [4] for lemmatization
 
     if userInput == "1":
         chunking(myDir)
@@ -61,13 +62,15 @@ def main_menu(myDir):
         stemmer(myDir)
     elif userInput == "3":
         tagger(myDir)
-    if userInput == "4":
+    elif userInput == "4":
+        lemmatizer(myDir)
+    if userInput == "5":
         word_count(myDir)
-    elif userInput == "5":    
-        top_words(myDir)
     elif userInput == "6":    
+        top_words(myDir)
+    elif userInput == "7":    
         word_find(myDir)
-    elif userInput == "7":
+    elif userInput == "8":
         # If the user is using split files, we go to a different function
         for f in fileList:
             author = f.split("/")[-1]
@@ -75,11 +78,11 @@ def main_menu(myDir):
                 lexical_variety_split(myDir)
             else:
                 lexical_variety(myDir)
-    elif userInput == "8":
-        distinctive(myDir)
     elif userInput == "9":
-        euclidian(myDir)
+        distinctive(myDir)
     elif userInput == "10":
+        euclidian(myDir)
+    elif userInput == "11":
         cosine(myDir)
     elif userInput == "x" or "X":
         exit()
@@ -260,7 +263,7 @@ def tagger(myDir):
     """POS tags words. Creates directory in current directory with POS tagged texts, or a .csv file with top 100 tagged words."""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
-    userFile = input("""Do you want [1] a .csv files with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\n>>> """)
+    userFile = input("""Do you want [1] a .csv file with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\n>>> """)
     valid = ["1", "2"]
     while condOut == 0:
         if userFile == "1":
@@ -312,6 +315,64 @@ def tagger(myDir):
                 writer.writerow(i)
     print("Done! Exiting...")
     exit()
+    
+    
+def lemmatizer(myDir):
+    """Lemmatizes words. Creates directory in current directory with lemmatized texts, or a .csv file with top 100 lemmas."""
+    fileList, noFiles = list_textfiles(myDir)
+    condOut = 0
+    userFile = input("""Do you want [1] a .csv file with top lemmas or [2] .txt files with\n lemmatized texts (useable as input for other functions)?\n>>> """)
+    valid = ["1", "2"]
+    while condOut == 0:
+        if userFile == "1":
+            condOut = 1
+        elif userFile == "2": 
+            lemmaTXTDir = myDir + "-lemma-TXT"               
+            if not os.path.exists(lemmaTXTDir):
+                os.makedirs(lemmaTXTDir)  
+            condOut = 2
+        else:
+            continue        
+    condStop = 0
+    userStop = input("Remove stopwords?\n>>> ").lower()
+    valid = ["yes", "y", "no", "n"]
+    while condStop == 0:
+        if userStop == "yes" or "y":
+            condStop = 1
+        elif userStop == "no" or "n": 
+            condStop = 2
+        else:
+            continue  
+    totalLemmaList = []
+    lmtzr = WordNetLemmatizer()
+    for filePath in fileList:
+        fSmall = os.path.split(filePath)[1] 
+        fName = os.path.splitext(fSmall)[0]
+        tokens = get_tokens(filePath)
+        if condStop == 1:
+            filtered = [w for w in tokens if not w in stopwords.words('english')]
+        if condStop ==2:
+            filtered = tokens
+        lemmaList = [lmtzr.lemmatize(w) for w in filtered]
+        lemmaString = ' '.join(lemmaList)
+        totalLemmaList.append(lemmaList)
+        if condOut == 2:
+            with open(os.curdir + "/" + lemmaTXTDir + "/" + fName + "-lemma" + ".txt", "w") as f:
+                f.write(str(lemmaString))
+    realList = []
+    for l in totalLemmaList:
+        for i in l:
+            realList.append(i)
+    totalCount = Counter(realList)    
+    totalTop = totalCount.most_common(100)
+    if condOut == 1:        
+        with open(myDir + "-lemma" + ".csv", "a", newline='') as f:
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            for i in totalTop:
+                writer.writerow(i)
+    print("Done! Exiting...")
+    exit()    
+    
     
 def word_count(myDir):
     """Simple word count function. Prints separate and total wordcount to terminal"""

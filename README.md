@@ -30,14 +30,19 @@ Note that Corporeal expects to be used for parsing English texts (in terms of  s
 Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing.
 
 <h4>Stemming</h4>
-Stems all words per file. User selects output: 
+Stems all words per file. Fast but less reliable than lemmatization. User selects output: 
 * One .csv file in the root folder, based on the aggregate stemmed texts, containing the top 100 words; 
-* Multiple .txt files with the stemmed texts. These stemmed texts (with their reduced inflectional word forms) may then be used as input for other functions. 
+* Multiple .txt files with the stemmed texts. These textt files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
 <h4>POS tagging</h4>
-POS tags all words per file, outputs tagged files in a new folder. User selects output:
+POS tags all words per file. User selects output:
 * One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
-* Multiple .txt files with the tagged texts. These tagged texts (with their reduced inflectional word forms) may then be used as input for other functions. 
+* Multiple .txt files with the tagged texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
+
+<h4>lemmatization</h4>
+Lemmatizes all words per file. Slower than stemming, but more precise. User selects output:
+* One .csv file in the root folder, based on the aggregate lemmatized texts, containing the top 100 words; 
+* Multiple .txt files with the lemmatized texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
 <h4>Word count</h4>
 Runs through all files and outputs word count per file.
