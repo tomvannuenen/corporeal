@@ -47,7 +47,7 @@ Lemmatizes all words per file. Slower than stemming, but more precise. User sele
 * Multiple .txt files with the lemmatized texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
 <h4>Word count</h4>
-Runs through all files and outputs word counts per file.
+Runs through all files and outputs word counts per subcorpus, as well as the total.
 
 <h4>Top words</h4>
 Runs through all files and outputs most-frequent words for the whole corpus. User is asked for number of words to be outputted.
