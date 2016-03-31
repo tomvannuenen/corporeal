@@ -11,15 +11,15 @@ Corporeal uses a few well-known Python packages. Check requirements.txt and use 
 
 <h2> Usage </h2>
  
-Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
+Navigate to the folder Corporeal is located in, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
-Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. 
+Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User should enter a directory name starting from current.
 
 *E.g. "data/combi"*
 
-Corporeal expects to find .txt files in the data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus (if the corpus has not been segmented yet, Corporeal can do that for you).
+Corporeal expects to find .txt files in this data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus (if the corpus has not been segmented yet, Corporeal can do that for you).
 
-*E.g. "Austen.txt, James.txt" or "Austen-1.txt, Austen-112.txt, James-1.txt, James-34.txt"*
+*E.g. "Austen.txt, James.txt" or "Austen-1.txt-Austen-112.txt"*
 
 Note that Corporeal expects to be used for parsing English texts (in terms of  stopword removal and tokenizing); inputting other languages may yield less desirable results.
 
@@ -27,7 +27,7 @@ Note that Corporeal expects to be used for parsing English texts (in terms of  s
 <h3> Features </h3>
 
 <h4>Chunking</h4>
-Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing. Output files are named in such a way that Corporeal can analyze them through other functions.
+Segments input text files in smaller size text files, and places them into new folder. User can determine the size of the chunks (i.e., the number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing. Output files are named in such a way that Corporeal can analyze them through other functions.
 
 <h4>Stemming</h4>
 Stems all words per file. Fast, but less reliable than lemmatization. User selects output: 
@@ -47,7 +47,7 @@ Lemmatizes all words per file. Slower than stemming, but more precise. User sele
 * Multiple .txt files with the lemmatized texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
 <h4>Word count</h4>
-Runs through all files and outputs word count per file.
+Runs through all files and outputs word counts per file.
 
 <h4>Top words</h4>
 Runs through all files and outputs most-frequent words for the whole corpus. User is asked for number of words to be outputted.
@@ -59,7 +59,7 @@ User is asked for word, output is two graphs:
 User can opt for a .csv file with these relative frequencies of the word. 
 
 <h4>Lexical variety (means and TTR)</h4>
-Calculates and visualizes mean word use and TTF scores. User can choose to make use of regular word tokens or POS-tagged word tokens (using NLTK's Penn Treebank Part-of-Speech Tagset). The output consists of:
+Calculates and visualizes mean word use and TTF scores. User can choose to make use of regular word tokens or POS-tagged word tokens, if the user hasn't created a POS-tagged the corpus herself yet. The output consists of:
 * Mean word frequency, i.e. the amount of word tokens divided by the amount of word types. The result is the average amount of times in which a word type is used in that file/subcorpus.
 * The Type-Token Ratio (TTR) score, i.e. the amount of word types dividied by the amount of word tokens, and its result multiplied by 100.
 * Bar chart output of compared means and TTR scores per subcorpus. 

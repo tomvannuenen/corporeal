@@ -2,6 +2,7 @@
 import os
 from os import listdir
 import csv
+import unicodedata
 import re
 import numpy as np
 from numpy import linspace
@@ -73,13 +74,7 @@ def main_menu(myDir):
     elif userInput == "7":    
         word_find(myDir)
     elif userInput == "8":
-        # If the user is using split files, we go to a different function
-        for f in fileList:
-            author = f.split("/")[-1]
-            if "-" in author:        # We could ask the user for a different escape char at te start too
-                lexical_variety_split(myDir)
-            else:
-                lexical_variety(myDir)
+        lexical_variety(myDir)
     elif userInput == "9":
         distinctive(myDir)
     elif userInput == "10":
@@ -135,11 +130,12 @@ def get_tokens(fn):
         text = f.read()
         lowers = text.lower()
         no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
-        # Another way of removing punct, but only works for ASCII
+        # Another way of removing punct, which only works for ASCII:
         # no_punctuation = lowers.translate(string.punctuation)
-        tokens = no_punctuation.split()
-        # SHOULD I REMOVE DIACRITICS? HOW?
-        # Another way of tokenizing, seems less optimal
+        no_diacritics = ''.join(c for c in unicodedata.normalize('NFD', no_punctuation)
+                  if unicodedata.category(c) != 'Mn')
+        tokens = no_diacritics.split()
+        # Another way of tokenizing, but seems less accurate:
         # tokens = nltk.word_tokenize(lowers)
         return tokens
 
@@ -454,17 +450,34 @@ def lemmatizer(myDir):
 def word_count(myDir):
     """Simple word count function. Prints separate and total wordcount to terminal"""
     fileList, noFiles = list_textfiles(myDir)
-    print("WORD COUNTS PER FILE")
-    print('%-*s %s' % (20, "Word", "Frequency"))
+    print("Word counts per subcorpus")
+    print('%-*s %s' % (20, "Subcorpus", "Frequency"))
     print("------------------------------")
     totalWordCount = 0
+    listIndex = 0
+    myDict = {}
+    myList = []     
+    # Starts the loop that will put all the authors/subcorpora in their separate lists inside myDict
     for filePath in fileList:
-        fSmall = os.path.split(filePath)[1] 
-        fName = os.path.splitext(fSmall)[0]
+        fName = filePath.split("/")[-1].split("-")[0]        
+        if fName not in myList:
+            author = fileList[listIndex].split("/")[-1].split("-")[0]
+            myDict[fName] = listFromAuthor(author, fileList)        
+            myList.append(fName)
+        listIndex += 1
         myWordCounter = 0
-        tokens = get_tokens(filePath)  
-        print("%-*s %i" % (20, fName, len(tokens)))
-        totalWordCount += len(tokens)
+    tokenDict = {}
+    for key, values in myDict.items():
+        authorTokens = []
+        for value in values:
+            tokenCounter = 0
+            tokens = get_tokens(value)
+            tokenCounter += len(tokens)    
+            totalWordCount += len(tokens)
+            authorTokens.append(tokenCounter)
+        tokenDict[key] = sum(authorTokens)
+    for k,v in sorted(tokenDict.items()):
+        print('%-*s %i' % (20, k, v))     
     print("\nTotal word count")
     print(str(totalWordCount) + "\n")
     print("Done! Exiting...")
@@ -629,107 +642,14 @@ def word_find(myDir):
     exit()
 
 def lexical_variety(myDir):
-    """Calculates and visualizes mean word use and TTF scores"""
-    print("Found unsplit subcorpora in folder. If the files are big, consider splitting them using chunking")
+    """Calculates and visualizes mean word use and TTF scores. If input is a hyphened series of chunks,
+    the output is organized per subcorpus"""
     fileList, noFiles = list_textfiles(myDir)
-    cond = 0
-    userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
-    while cond == 0:
-        if userFile == "yes" or userFile == "y":
-            outFile = "lexical_variety.csv"
-            f = open(outFile, "a", newline='')
-            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerow( ("filename", "mean", "TTF") )    
-            cond = 2
-        elif userFile == "no" or userFile == "n":
-            cond = 1
-        else:
-            userFile = input("Please try again!\n>>> ")
-            continue
-    totalWordCounter = 0
-    totalTypeCounter = 0
-    allMeans = {}
-    allTTR = {}
-    tokensCond = 0
-    while tokensCond == 0:
-        userTokens = input("Do you want to use [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
-        valid = ["1", "2"]
-        if userTokens in valid:
-            tokensCond = int(userTokens)
-        else:
-            print("Please try again.")
-
-    print("LEXICAL VARIETY PER FILE")
-    print('%-*s %-*s %s' % (30, "File Name", 20, "Mean Word Freq", "Type-Token Ratio"))       
-    for filePath in fileList:
-        tokenCounter = 0
-        typeCounter = 0
-        fSmall = os.path.split(filePath)[1] 
-        fName = os.path.splitext(fSmall)[0]        
-        if tokensCond == 1:
-            tokens = get_tokens(filePath)
-        else:
-            tokens = get_POS_tokens(filePath)            
-        tokenCounter += len(tokens)    
-        typeCounter = len(set(tokens))
-        totalWordCounter += len(tokens)
-        totalTypeCounter += len(set(tokens))
-        mean = tokenCounter / typeCounter # average times in which word types are used
-        allMeans[fName] = mean
-        TTR = typeCounter / tokenCounter
-        allTTR[fName] = TTR
-        print('%-*s %-*f %f' % (30, fName, 20, mean, TTR*100))        
-        if cond == 2:
-            with open(outFile, "a", newline='') as f:
-                writer.writerow( (fName, mean, TTR*100) )
-    # Calculate total mean value based on the counting we've been doing
-    totalMeans = totalWordCounter / totalTypeCounter
-    # Dict comprehension to normalize values, subtracting total mean from the mean of every text
-    allMeans = {key:value-totalMeans for key, value in allMeans.items()} 
-    
-    # Plotting means, sorted by values
-    fig, ax = plt.subplots()
-    sortedMeans = OrderedDict(sorted(allMeans.items(), key=lambda t: t[1]))
-    N = len(sortedMeans)
-    x = np.arange(1, N+1)
-    y = [num for num in sortedMeans.values()]
-    labels = sorted(allMeans, key=allMeans.get, reverse=False)
-    width = 1
-    bar1 = plt.bar(x, y, width, color="lightcoral")
-    plt.ylabel("mean word use")
-    # Hide major format
-    ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    # Insert minor format
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
-    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
-    plt.xlim(1, len(sortedMeans) +1)
-    plt.title("Lexical repetitiveness by normalized mean word use per file, ordered by value", fontsize=14, y=1.03)    
-    plt.show()
-
-    # Plotting TTR, sorted by values
-    fig, ax = plt.subplots()
-    sortedTTR = OrderedDict(sorted(allTTR.items(), key=lambda t: t[1]))
-    N = len(sortedTTR)
-    x = np.arange(1, N+1)
-    y = [num for num in sortedTTR.values()]
-    labels = sorted(allTTR, key=allTTR.get, reverse=False)
-    width = 1
-    bar1 = plt.bar(x, y, width, color="lightcoral")
-    plt.ylabel("TTR")
-    ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
-    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
-    plt.xlim(1, len(sortedTTR) +1)
-    plt.title("Lexical variety by TTR value per file, ordered by value", fontsize=14, y=1.03)    
-    plt.show()
-    print("Done! Exiting...")
-    exit()
-    
-def lexical_variety_split(myDir):
-    """Calculates and visualizes mean word use and TTF scores. The parts of the subcorps
-    are organized per subcorpus"""
-    print("Found split subcorpora in folder. Will concatenate for evaluation.")
-    fileList, noFiles = list_textfiles(myDir)
+    author = fileList[0].split("/")[-1]
+    if "-" in author:        # We could ask the user for a different escape char at te start too
+        print("Found split subcorpora in folder. Will concatenate for evaluation.") 
+    else:
+        print("Found unsplit subcorpora in folder. If the files are big, consider splitting them \nusing Corporeal's chunking function.")
     cond = 0
     userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
     while cond == 0:
@@ -763,7 +683,9 @@ def lexical_variety_split(myDir):
     myList = []     
     # Starts the loop that will put all the authors/subcorpora in their separate lists inside myDict
     for filePath in fileList:
-        fName = filePath.split("/")[-1].split("-")[0]        
+        fName = filePath.split("/")[-1].split("-")[0]
+        if fName.endswith('.txt'):
+            fName = fName.replace('.txt','')
         if fName not in myList:
             author = fileList[listIndex].split("/")[-1].split("-")[0]
             myDict[fName] = listFromAuthor(author, fileList)        
@@ -794,7 +716,7 @@ def lexical_variety_split(myDir):
             authorTTR.append(TTR)
         meansDict[key] = sum(authorMean) / len(authorMean)
         TTRDict[key] = sum(authorTTR) / len(authorTTR)
-    print("LEXICAL VARIETY PER SUBCORPUS")
+    print("Lexical variety per subcorpus")
     print('%-*s %-*s %s' % (30, "Corpus Name", 20, "Mean Word Freq", "Type-Token Ratio"))
     for (k,v), (k2,v2) in zip(meansDict.items(), TTRDict.items()):
         print('%-*s %-*f %f' % (30, k, 20, v, v2))     
