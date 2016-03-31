@@ -19,7 +19,7 @@ Corporeal expects to be placed in a folder that also contains a data folder. It 
 
 Corporeal expects to find .txt files in this data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus (if the corpus has not been segmented yet, Corporeal can do that for you).
 
-*E.g. "Austen.txt, James.txt" or "Austen-1.txt-Austen-112.txt"*
+*E.g. "Austen.txt", "James.txt" or "Austen-1.txt" to "Austen-112.txt"*
 
 Note that Corporeal expects to be used for parsing English texts (in terms of  stopword removal and tokenizing); inputting other languages may yield less desirable results.
 
@@ -64,7 +64,7 @@ Calculates and visualizes mean word use and TTF scores. User can choose to make 
 * The Type-Token Ratio (TTR) score, i.e. the amount of word types dividied by the amount of word tokens, and its result multiplied by 100.
 * Bar chart output of compared means and TTR scores per subcorpus. 
 Note that lexical variety will always be lower if the texts are longer: only if the input corpus consists of files of roughly the same size, some degree of comparison might be possible. If input files are of a significantly different size, chunking up front is recommended.
-Computation depends on input: if user inputs list of sperarately names subcorpora (*e.g. "austen.txt" and "james.txt"*), the script goes through those files; if the user inputs list of chunked subcorpora (*e.g. "austen-1" to "austen-100" and "james-1" to "james-100"*), the script sorts the files per subcorpora.
+Computation depends on input: if user inputs list of separately named subcorpora (*e.g. "austen.txt" and "james.txt"*), the script goes through those files; if the user inputs list of chunked subcorpora (*e.g. "austen-1" to "austen-100" and "james-1" to "james-100"*), the script sorts the files per subcorpora.
 
 <h4>Distinctive words</h4>
 User is asked for a subcorpus name (e.g. "Austen"), output is a list of distinctive words for that subcorpus by comparing average rates of that word in that subcorpus vs. the entire corpus. The difference between these rates is calculated as distinciveness. User can opt for a .csv file with these distinctive words. 
