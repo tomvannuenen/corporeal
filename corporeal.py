@@ -21,31 +21,34 @@ plt.style.use('ggplot')
 
 def main():
     print("-------------------------------")
-    print("CORPOREAL 0.2, by Tom van Nuenen")
+    print("CORPOREAL 0.3, by Tom van Nuenen")
     print("-------------------------------")   
-    myDir = input("Please enter directory within current, containing .txt files. \nExample: data/data-folder \nIts files may be named with a hypen between subcorpus and id. \nExamples: austen-102.txt, houellebecq-1.txt, fullcorpus.txt\n>>> ")
-    if os.path.isdir(myDir):
-        fileList, fileNo = list_textfiles(myDir)
-        if not fileList:
-            print("There are no .txt files in this folder. Exiting...")
-            exit()        
-        if fileNo == 1:
-            print("This folder contains " + str(fileNo) + " file: " + fileList[0].split("/")[-1])
-        if fileNo > 1:
-            print("This folder contains " + str(fileNo) + " files, from " + fileList[0].split("/")[-1] + " to " + fileList[-1].split("/")[-1] + "\n")
-        main_menu(myDir)         
-    else:
-        print("That folder does not exist. Exiting...")
-        exit()
-
+    print("Press CTRL-C at any time to quit\n")       
+    goOn = 0
+    myDir = input("Please enter directory name containing .txt files. \nExample: data/data-folder \nIts files may be named with a hypen between subcorpus and id. \nExamples: austen-102.txt, houellebecq-1.txt, fullcorpus.txt\n>>> ")
+    while goOn == 0:
+        if os.path.isdir(myDir):
+            fileList, fileNo = list_textfiles(myDir)
+            if not fileList:
+                print("There are no .txt files in this folder. Exiting...")
+                exit()        
+            if fileNo == 1:
+                print("This folder contains " + str(fileNo) + " file: " + fileList[0].split("/")[-1])
+            if fileNo > 1:
+                print("This folder contains " + str(fileNo) + " files, from " + fileList[0].split("/")[-1] + " to " + fileList[-1].split("/")[-1] + "\n")
+            goOn = 1
+            main_menu(myDir)         
+        else:
+            myDir = input("That folder does not exist... Try again!\n>>> ")
+            continue 
+    
 def main_menu(myDir):
     """Main menu the user starts off in"""
     fileList, noFiles = list_textfiles(myDir)
-    print("--------------MAIN MENU--------------")
     userInput = input("""Please select:
     [1] for chunking
     [2] for stemming
-    [3] for POS tagging
+    [3] for POS tagging / filtering
     [4] for lemmatization
     [5] for word count
     [6] for top words 
@@ -55,7 +58,6 @@ def main_menu(myDir):
     [10] for Euclidian distances
     [11] for TF-IDF cosine distances
     [x] to exit \n>>> """)
-
     if userInput == "1":
         chunking(myDir)
     elif userInput == "2":
@@ -64,7 +66,7 @@ def main_menu(myDir):
         tagger(myDir)
     elif userInput == "4":
         lemmatizer(myDir)
-    if userInput == "5":
+    elif userInput == "5":
         word_count(myDir)
     elif userInput == "6":    
         top_words(myDir)
@@ -93,11 +95,12 @@ def main_menu(myDir):
 # --- SUPPORTING FUNCTIONS ---
 
 def list_textfiles(directory):
-    "Return a list of filenames ending in '.txt' in DIRECTORY. Removes files that are empty."
+    "Return a list of filenames ending in '.txt' in DIRECTORY. Remove files that are (almost) empty."
     textFiles = []
     # We are sorting because different operating systems may list files in different orders
     for fileName in sorted(listdir(directory)):
         if fileName.endswith(".txt"):
+            # 70 bytes seems a nice indicator of .txt files that have about 10 words or less
             if os.stat(directory + "/" + fileName).st_size > 70:
                 textFiles.append(directory + "/" + fileName)
     fileNo = 1 + len(textFiles)
@@ -175,12 +178,12 @@ def listFromAuthor(author, fileList):
 # --- MAIN FUNCTIONS ---
 
 def chunking(myDir):
-    """Copy text file into new folder with chunks of that text.
+    """Split large .txt file into chunks. Output is a folder of small .txt files.
     Size of the chunks is determined by user."""
     fileList, noFiles = list_textfiles(myDir)
     chunks = []
     try:
-        chunkLength = int(input("how many words should each chunks be? Enter a number\n(suggested: 500 or 1000).\n>>> "))
+        chunkLength = int(input("how many words should each chunks be? Enter a number\n(suggested: 500-1000).\n>>> "))
     except ValueError:
         print("Please enter a number")
         chunking(myDir)
@@ -208,12 +211,11 @@ def stemmer(myDir):
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
     userFile = input("""Do you want [1] a .csv file with top stemmed counts or [2] .txt files with\nstemmed texts (useable as input for other functions)?\n>>> """)
-    valid = ["1", "2"]
     while condOut == 0:
         if userFile == "1":
             condOut = 1
         elif userFile == "2": 
-            stemTXTDir = myDir + "-stemTXT"
+            stemTXTDir = myDir + "-stem-TXT"
             if not os.path.exists(stemTXTDir):
                 os.makedirs(stemTXTDir) 
             condOut = 2
@@ -221,7 +223,6 @@ def stemmer(myDir):
             continue        
     condStop = 0
     userStop = input("Remove stopwords?\n>>> ").lower()
-    valid = ["yes", "y", "no", "n"]
     while condStop == 0:
         if userStop == "yes" or "y":
             condStop = 1
@@ -243,7 +244,7 @@ def stemmer(myDir):
         text = ' '.join(stemmed)
         totalStemList.append(stemmed)
         if condOut == 2:
-            with open(os.curdir + "/" + stemTXTDir + "/" + fName + "-stemmed" + ".txt", "a", newline='') as f:
+            with open(os.curdir + "/" + stemTXTDir + "/" + fName + "-stems" + ".txt", "a", newline='') as f:
                 f.write(str(text))
     realList = []
     for l in totalStemList:
@@ -260,31 +261,54 @@ def stemmer(myDir):
     exit()
 
 def tagger(myDir):
-    """POS tags words. Creates directory in current directory with POS tagged texts, or a .csv file with top 100 tagged words."""
+    """POS tags words. Creates directory in current directory with POS tagged texts, or a .csv file
+    with top 100 tagged words. Can also filter corpus by POS tags"""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
     userFile = input("""Do you want [1] a .csv file with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\n>>> """)
-    valid = ["1", "2"]
     while condOut == 0:
         if userFile == "1":
             condOut = 1
         elif userFile == "2": 
+            condOut = 2
+        else:
+            userFile = input("Please try again!")
+            continue        
+    condStop = 0
+    while condStop == 0:
+        userStop = input("Remove stopwords?\n>>> ").lower()
+        if userStop == "yes" or "y":
+            condStop = 1
+        if userStop == "no" or "n": 
+            condStop = 2
+        else:
+            continue   
+    condFilter = 0
+    userFilter = input("Filter output by [1] none, [2] nouns, [3] pronouns or [4] verbs? \nTip: you can always filter at a later stage by using the POS filter function.\n>>> ")
+    while condFilter == 0:
+        if userFilter == "1": 
             posTXTDir = myDir + "-POS-TXT"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
-            condOut = 2
+            condFilter = 1
+        elif userFilter == "2": 
+            posTXTDir = myDir + "-POS-TXT-nouns"               
+            if not os.path.exists(posTXTDir):
+                os.makedirs(posTXTDir)  
+            condFilter = 2
+        elif userFilter == "3": 
+            posTXTDir = myDir + "-POS-TXT-pronouns"               
+            if not os.path.exists(posTXTDir):
+                os.makedirs(posTXTDir)  
+            condFilter = 3
+        elif userFilter == "4": 
+            posTXTDir = myDir + "-POS-TXT-verbs"               
+            if not os.path.exists(posTXTDir):
+                os.makedirs(posTXTDir)  
+            condFilter = 3
         else:
-            continue        
-    condStop = 0
-    userStop = input("Remove stopwords?\n>>> ").lower()
-    valid = ["yes", "y", "no", "n"]
-    while condStop == 0:
-        if userStop == "yes" or "y":
-            condStop = 1
-        elif userStop == "no" or "n": 
-            condStop = 2
-        else:
-            continue  
+            userFilter = input("Please try again!\n>>> ")
+            continue
     totalPOSlist = []
     for filePath in fileList:
         fSmall = os.path.split(filePath)[1] 
@@ -292,13 +316,27 @@ def tagger(myDir):
         tokens = get_tokens(filePath)
         if condStop == 1:
             filtered = [w for w in tokens if not w in stopwords.words('english')]
-        if condStop ==2:
+        elif condStop == 2:
             filtered = tokens
         pos = nltk.pos_tag(filtered)
         posTokens = []
-        for tup in pos:
-            posTokens.append(''.join(tup))
-        totalPOSlist.append(pos)
+        if condFilter == 1:
+            for tup in pos:
+                posTokens.append(''.join(tup))
+        elif condFilter == 2:
+            for tup in pos:
+                if tup[1] == "NN":
+                    posTokens.append(''.join(tup))
+        elif condFilter == 3:
+            for tup in pos:
+                if tup[1] == "JJ":
+                    posTokens.append(''.join(tup))
+        elif condFilter == 4:
+            for tup in pos:
+                if tup[1] == "VB" or "VBN" or "VBP" or "VBD":
+                    posTokens.append(''.join(tup))
+        posText = ' '.join(posTokens) 
+        totalPOSlist.append(pos)    
         if condOut == 2:
             with open(os.curdir + "/" + posTXTDir + "/" + fName + "-POS" + ".txt", "w") as f:
                 f.write(str(posText))
@@ -315,14 +353,54 @@ def tagger(myDir):
                 writer.writerow(i)
     print("Done! Exiting...")
     exit()
-    
-    
+
+#def pos_filter (myDir):
+#    """Filters POS-tagged folder of files by nouns, verbs or pronouns"""
+#    fileList, noFiles = list_textfiles(myDir)    
+#    realList = []
+#    condFilter = 0
+#    userFilter = input("Filter output by [1] nouns, [2] pronouns or [3] verbs?\n>>> ")
+#    while condFilter == 0:
+#        if userFilter == "1": 
+#            posTXTDir = myDir + "-nouns"               
+#            if not os.path.exists(posTXTDir):
+#                os.makedirs(posTXTDir)  
+#            for filePath in fileList:
+#                tokens = get_tokens(filePath)
+#                for token in tokens:
+#                    if "NN" in token[-2:-1]:
+#                        realList.append(token)        
+#            condFilter = 1        
+#        elif userFilter == "2": 
+#            posTXTDir = myDir + "-pronouns"               
+#            if not os.path.exists(posTXTDir):
+#                os.makedirs(posTXTDir)  
+#            for filePath in fileList:
+#                tokens = get_tokens(filePath)
+#                for token in tokens:
+#                    if "JJ" in token[-2:-1]:
+#                        realList.append(token)
+#            condFilter = 2
+#        elif userFilter == "3": 
+#            posTXTDir = myDir + "-verbs"               
+#            if not os.path.exists(posTXTDir):
+#                os.makedirs(posTXTDir)  
+#            for filePath in fileList:
+#                tokens = get_tokens(filePath)
+#                for token in tokens:
+#                    if "VB" or "VBN" or "VBP" or "VBD" in token[-2:-1]:
+#                        realList.append(token)
+#            condFilter = 3
+#        else:
+#            userFilter = input("Please try again! \n>>> ")
+#            continue 
+#    print(realList)
+
 def lemmatizer(myDir):
     """Lemmatizes words. Creates directory in current directory with lemmatized texts, or a .csv file with top 100 lemmas."""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
     userFile = input("""Do you want [1] a .csv file with top lemmas or [2] .txt files with\n lemmatized texts (useable as input for other functions)?\n>>> """)
-    valid = ["1", "2"]
     while condOut == 0:
         if userFile == "1":
             condOut = 1
@@ -335,13 +413,13 @@ def lemmatizer(myDir):
             continue        
     condStop = 0
     userStop = input("Remove stopwords?\n>>> ").lower()
-    valid = ["yes", "y", "no", "n"]
     while condStop == 0:
         if userStop == "yes" or "y":
             condStop = 1
         elif userStop == "no" or "n": 
             condStop = 2
         else:
+            userStop = input("Please try again!\n>>> ").lower()
             continue  
     totalLemmaList = []
     lmtzr = WordNetLemmatizer()
@@ -357,7 +435,7 @@ def lemmatizer(myDir):
         lemmaString = ' '.join(lemmaList)
         totalLemmaList.append(lemmaList)
         if condOut == 2:
-            with open(os.curdir + "/" + lemmaTXTDir + "/" + fName + "-lemma" + ".txt", "w") as f:
+            with open(os.curdir + "/" + lemmaTXTDir + "/" + fName + "-lemmas" + ".txt", "w") as f:
                 f.write(str(lemmaString))
     realList = []
     for l in totalLemmaList:
@@ -372,7 +450,6 @@ def lemmatizer(myDir):
                 writer.writerow(i)
     print("Done! Exiting...")
     exit()    
-    
     
 def word_count(myDir):
     """Simple word count function. Prints separate and total wordcount to terminal"""
@@ -424,20 +501,18 @@ def top_words(myDir):
     # Create a frequency distribution
     allWords = [word for word in allWords if len(word) > 1]
     condStop = 0
+    inp2 = input("Remove stopwords? (EN only)\n>>> ").lower()
     while condStop == 0:
-        inp2 = input("Remove stopwords? (EN only)\n>>> ").lower()
-        valid = ["yes", "y", "no", "n"]
-        if inp2 in valid:
-            if inp2 == "no" or inp2 == "n":
-                words = allWords
-                condStop = 1
-            elif inp2 == "yes" or inp2 == "y":
-                stopWords = set(stopwords.words('english'))
-                cleanWords = [w for w in allWords if not w in stopWords]
-                words = cleanWords
-                condStop = 2    
+        if inp2 == "no" or inp2 == "n":
+            words = allWords
+            condStop = 1
+        elif inp2 == "yes" or inp2 == "y":
+            stopWords = set(stopwords.words('english'))
+            cleanWords = [w for w in allWords if not w in stopWords]
+            words = cleanWords
+            condStop = 2    
         else:
-            print("please enter 'yes' or 'no'!")
+            inp2 = input("please enter 'yes' or 'no'!\n>>> ").lower()
             continue
     fdist = nltk.FreqDist(words)
     # Show the top N words in the list, with counts
@@ -457,18 +532,19 @@ def word_find(myDir):
     as well as two plots"""
     myWord = input("What word should I look for?\n>>> ").lower()    
     cond = 0
+    userFile = input("Do you want a .csv file with (relative) frequencies of the word?\n>>> ").lower()
     while cond == 0:
-        userFile = input("Do you want a .csv file with (relative) frequencies of the word?\n>>> ").lower()
-        valid = ["yes", "y", "no", "n"]
-        if userFile in valid:
-            if userFile == "yes" or userFile == "y":
-                outFile = "relative_word_freq-" + myWord + ".csv"
-                f = open(outFile, "a", newline='')
-                writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerow( ("filename", "wordcount", "word: %s" % myWord, "relFreq: %s" % myWord, "relFreqTotal: %s" % myWord) )    
-                cond = 2
-            elif userFile == "no" or userFile == "n":
-                cond = 1
+        if userFile == "yes" or userFile == "y":
+            outFile = "relative_word_freq-" + myWord + ".csv"
+            f = open(outFile, "a", newline='')
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerow( ("filename", "wordcount", "word: %s" % myWord, "relFreq: %s" % myWord, "relFreqTotal: %s" % myWord) )    
+            cond = 2
+        elif userFile == "no" or userFile == "n":
+            cond = 1
+        else:
+            userFile = input("Please try again!\n>>> ").lower()
+            continue
     totalMyWord = 0
     totalWords = 0
     relFreqList = []
@@ -513,7 +589,7 @@ def word_find(myDir):
     bar1 = plt.bar(x, y, width, color="lightcoral")
     plt.ylabel("relative frequency")
     plt.xticks(x - 1 + width, labels, rotation='30')
-    # Set 'minor ticks' so that they are located halfway between the major ticks
+    # Set 'minor ticks' so that they are located halfway between the major ticks.
     # First, hide major tick labels
     #ax.xaxis.set_major_formatter(ticker.NullFormatter())
     # Then, customize minor tick labels
@@ -557,20 +633,19 @@ def lexical_variety(myDir):
     print("Found unsplit subcorpora in folder. If the files are big, consider splitting them using chunking")
     fileList, noFiles = list_textfiles(myDir)
     cond = 0
+    userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
     while cond == 0:
-        userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
-        valid = ["yes", "y", "no", "n"]
-        if userFile in valid:
-            if userFile == "yes" or userFile == "y":
-                outFile = "lexical_variety.csv"
-                f = open(outFile, "a", newline='')
-                writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerow( ("filename", "mean", "TTF") )    
-                cond = 2
-            elif userFile == "no" or userFile == "n":
-                cond = 1
+        if userFile == "yes" or userFile == "y":
+            outFile = "lexical_variety.csv"
+            f = open(outFile, "a", newline='')
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerow( ("filename", "mean", "TTF") )    
+            cond = 2
+        elif userFile == "no" or userFile == "n":
+            cond = 1
         else:
-            print("Please try again.")
+            userFile = input("Please try again!\n>>> ")
+            continue
     totalWordCounter = 0
     totalTypeCounter = 0
     allMeans = {}
@@ -656,20 +731,18 @@ def lexical_variety_split(myDir):
     print("Found split subcorpora in folder. Will concatenate for evaluation.")
     fileList, noFiles = list_textfiles(myDir)
     cond = 0
+    userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
     while cond == 0:
-        userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
-        valid = ["yes", "y", "no", "n"]
-        if userFile in valid:
-            if userFile == "yes" or userFile == "y":
-                outFile = "lexical_variety_split.csv"
-                f = open(outFile, "a", newline='')
-                writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerow( ("filename", "mean", "TTF") )    
-                cond = 2
-            elif userFile == "no" or userFile == "n":
-                cond = 1
+        if userFile == "yes" or userFile == "y":
+            outFile = "lexical_variety_split.csv"
+            f = open(outFile, "a", newline='')
+            writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerow( ("filename", "mean", "TTF") )    
+            cond = 2
+        elif userFile == "no" or userFile == "n":
+            cond = 1
         else:
-            print("Please try again.")
+            userFile = input("Please try again!\n>>> ").lower()
     totalWordCounter = 0
     totalTypeCounter = 0
     allMeans = {}
@@ -764,7 +837,7 @@ def lexical_variety_split(myDir):
     ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
     ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
     plt.xlim(1, len(sortedTTR) +1)
-    plt.title("Lexical repetitiveness by TTR score per subcorpus, ordered by value", fontsize=14, y=1.03)    
+    plt.title("Lexical variety by TTR score per subcorpus, ordered by value", fontsize=14, y=1.03)    
     plt.show()
     print("Done! Exiting...")
     exit()
@@ -807,6 +880,7 @@ def distinctive(myDir):
             writer.writerow( ("word", "keyness") )    
             condCSV = 2
         else:
+            print("Please try again!")
             continue  
     vectorizer = CountVectorizer(input='filename') # Input expects a list of filenames
     dtm = vectorizer.fit_transform(fileList)

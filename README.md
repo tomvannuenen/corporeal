@@ -1,23 +1,23 @@
 Corporeal
 ========================
 
-An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac). Current version is pre-alpha, still under construction.
+An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac). Current version is pre-alpha, still under construction. Please let me know about any bugs you may find.
 
 
 <h2> Requirements </h2>
 
-Corporeal uses a few well-known Python packages. Check requirements.txt and use your favorite package manager. Pip-users (https://pypi.python.org/pypi/pip) may run getRequirements (.sh) from terminal to get pip to install the packages.
+Corporeal uses a few well-known Python packages. Check requirements.txt and use your favorite package manager to install these. Pip-users (https://pypi.python.org/pypi/pip) may run getRequirements (.sh) from terminal to get pip to install the packages.
 
 
 <h2> Usage </h2>
  
 Navigate to the folder Corporeal is installed in in terminal, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
-Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User must enter folder starting from current.
+Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. 
 
 *E.g. "data/combi"*
 
-Corporeal expects .txt data in the data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus.
+Corporeal expects to find .txt files in the data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus (if the corpus has not been segmented yet, Corporeal can do that for you).
 
 *E.g. "Austen.txt, James.txt" or "Austen-1.txt, Austen-112.txt, James-1.txt, James-34.txt"*
 
@@ -27,17 +27,18 @@ Note that Corporeal expects to be used for parsing English texts (in terms of  s
 <h3> Features </h3>
 
 <h4>Chunking</h4>
-Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing.
+Segments input text files in smaller size into new folder. User can determine the size of the chunks (number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing. Output files are named in such a way that Corporeal can analyze them through other functions.
 
 <h4>Stemming</h4>
-Stems all words per file. Fast but less reliable than lemmatization. User selects output: 
+Stems all words per file. Fast, but less reliable than lemmatization. User selects output: 
 * One .csv file in the root folder, based on the aggregate stemmed texts, containing the top 100 words; 
 * Multiple .txt files with the stemmed texts. These textt files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
-<h4>POS tagging</h4>
+<h4>POS tagging / filtering</h4>
 POS tags all words per file. User selects output:
 * One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
 * Multiple .txt files with the tagged texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
+User may then choose to filter POS output for nouns, pronouns or verbs.
 
 <h4>lemmatization</h4>
 Lemmatizes all words per file. Slower than stemming, but more precise. User selects output:
