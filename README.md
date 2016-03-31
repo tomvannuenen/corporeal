@@ -38,6 +38,7 @@ Stems all words per file. Fast, but less reliable than lemmatization. User selec
 POS tags all words per file. User selects output:
 * One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
 * Multiple .txt files with the tagged texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
+
 User may then choose to filter POS output for nouns, pronouns or verbs.
 
 <h4>lemmatization</h4>
