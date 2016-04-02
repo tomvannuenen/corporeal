@@ -70,12 +70,11 @@ Computation depends on input: if user inputs list of separately named subcorpora
 User is asked for a subcorpus name (e.g. "Austen"), output is a list of distinctive words for that subcorpus by comparing average rates of that word in that subcorpus vs. the entire corpus. The difference between these rates is calculated as distinctiveness. User can opt for a .csv file with these distinctive words. 
 
 <h4>Euclidian distances</h4>
-Calculates Euclidian distances between all files in the data folder based on their word counts. Outputs two graphs based on these distances:
+Calculates Euclidian distances between all subcorpora in the data folder based on their word counts. If user inputs split corpora, these will be concatenated into subcorpora before analysis. Output consists of two graphs:
 * 2D plot
 * Dendogram
 
 <h4>TF-IDF cosine distances</h4>
-Calculates cosine distances between all files in the data folder based on their TF-IDF scores. Outputs two graphs based on these distances:
+Calculates cosine distances between all subcorpora in the data folder based on their TF-IDF scores. If user inputs split corpora, they will be concatenated into subcorpora before analysis. Output consists of two graphs:
 * 2D plot
 * Dendogram
-

@@ -851,33 +851,62 @@ def distinctive(myDir):
     print("Done! Exiting...")
     exit()    
     
-    # Note that as of now this only works for 1 subcorpus; it might be nice to be able to
-    # compare the distinctiveness for all subcorpora. 
-    # What we then need to do is to calculate the average rate of word use across all texts for
-    # each author, and then look for cases where the average rate is zero for one author.
-    
-    
 def euclidian(myDir):
+    """Calculates Euclidian distances between subcorpora.
+    If corpora are split, they will be concatenated before analysis."""
     from sklearn.metrics.pairwise import euclidean_distances
     from sklearn.manifold import MDS
     from scipy.cluster.hierarchy import ward, dendrogram
     import matplotlib.pyplot as plt
-
     fileList, noFiles = list_textfiles(myDir)    
-    vectorizer = CountVectorizer(input='filename', stop_words='english', min_df=5)
-    dtm = vectorizer.fit_transform(fileList)  # a sparse matrix
+    author = fileList[0].split("/")[-1]
+    if "-" in author:        # We could ask the user for a different escape char at te start too
+        print("Found split subcorpora in folder. Will concatenate for evaluation.") 
+    else:
+        print("Found unsplit subcorpora in folder.")
+    listIndex = 0
+    myDict = {} # The dict to contain sorted filenames
+    myList = [] # Just some list
+    # Loop that will put all the authors and associated filenames inside myDict
+    for filePath in fileList:
+        fName = filePath.split("/")[-1].split("-")[0]        
+        if fName.endswith('.txt'):
+            fName = fName.replace('.txt','')
+        if fName not in myList:
+            author = fileList[listIndex].split("/")[-1].split("-")[0]
+            myDict[fName] = listFromAuthor(author, fileList)        
+            myList.append(fName)
+        listIndex += 1
+        myWordCounter = 0
+    # Append all texts together per author and use those
+    tokensDict = {}
+    for key, values in myDict.items():
+        tokensList = []
+        for v in values:
+            t = get_tokens(v)
+            tokensList.append(t)
+        # Makeshift way to append items in nested lists to 1 other list
+        realList = []
+        for l in tokensList:
+            for i in l:
+                realList.append(i)
+        # Transform into str
+        tokens = ' '.join(realList)       
+        tokensDict[key] = tokens
+    sortedDict = OrderedDict(sorted(tokensDict.items(), key=lambda t: t[0]))    
+    vectorizer = CountVectorizer()
+    dtm = vectorizer.fit_transform(sortedDict.values())
     vocab = vectorizer.get_feature_names()  # a list    
     dtm = dtm.toarray()  # convert to a regular array
     vocab = np.array(vocab)
     dist = euclidean_distances(dtm)
-    
     #2D plot
     mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
     pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
     xs, ys = pos[:, 0], pos[:, 1]
-    names = [os.path.basename(fn).replace('.txt', '') for fn in fileList] 
+    names = [i for i in sortedDict.keys()]
     for x, y, name in zip(xs, ys, names):
-        color = 'orange' if "spotted" in name else 'skyblue'
+        color = 'lightcoral'
         plt.scatter(x, y, c=color)
         plt.text(x, y, name)
     plt.title("2D Euclidian distances between subcorpora")
@@ -887,34 +916,68 @@ def euclidian(myDir):
     linkage_matrix = ward(dist)
     dendrogram(linkage_matrix, orientation="right", labels=names);
     plt.tight_layout()  # fixes margins
-    plt.title("Dendogram")
+    plt.title("Dendogram using Euclidian distances between subcorpora")
     plt.show()
     print("Done! Exiting...")
     exit()
     
 def cosine(myDir):
+    """Calculates Cosine distances between subcorpora.
+    If corpora are split, they will be concatenated before analysis."""
     import matplotlib.pyplot as plt
     from sklearn.metrics.pairwise import cosine_similarity
     from sklearn.manifold import MDS
     from mpl_toolkits.mplot3d import Axes3D
     from scipy.cluster.hierarchy import ward, dendrogram
     from sklearn.feature_extraction.text import TfidfVectorizer
-
     fileList, noFiles = list_textfiles(myDir)
-    vectorizer = TfidfVectorizer(input='filename', stop_words='english', min_df=5)
-    tfidf = vectorizer.fit_transform(fileList)
+    if "-" in author:        # We could ask the user for a different escape char at te start too
+        print("Found split subcorpora in folder. Will concatenate for evaluation.") 
+    else:
+        print("Found unsplit subcorpora in folder.")
+    listIndex = 0
+    myDict = {} # The dict to contain sorted filenames
+    myList = [] # Just some list
+    # Loop that will put all the authors and associated filenames inside myDict
+    for filePath in fileList:
+        fName = filePath.split("/")[-1].split("-")[0]        
+        if fName.endswith('.txt'):
+            fName = fName.replace('.txt','')
+        if fName not in myList:
+            author = fileList[listIndex].split("/")[-1].split("-")[0]
+            myDict[fName] = listFromAuthor(author, fileList)        
+            myList.append(fName)
+        listIndex += 1
+        myWordCounter = 0
+    # Append all texts together per author and use those
+    tokensDict = {}
+    for key, values in myDict.items():
+        tokensList = []
+        for v in values:
+            t = get_tokens(v)
+            tokensList.append(t)
+        # Makeshift way to append items in nested lists to 1 other list
+        realList = []
+        for l in tokensList:
+            for i in l:
+                realList.append(i)
+        # Transform into str
+        tokens = ' '.join(realList)       
+        tokensDict[key] = tokens        
+    sortedDict = OrderedDict(sorted(tokensDict.items(), key=lambda t: t[0]))    
+    vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf = vectorizer.fit_transform(sortedDict.values())
     dtm = tfidf.toarray()
-
     # Cosine similarity is a measure of similarity so we need to 'flip' the measure so that a
     # larger angle receives a larger value. The distance measure derived from cosine similarity
     # is thus one minus the cosine similarity between two vectors.
     dist = 1 - cosine_similarity(dtm)
-
+    
     # 2d plot
-    mds = MDS(n_components=2, dissimilarity="precomputed")
+    mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
     pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
     xs, ys = pos[:, 0], pos[:, 1]
-    names = [os.path.basename(fn).replace('.txt', '') for fn in fileList]
+    names = [i for i in sortedDict.keys()]
     for x, y, name in zip(xs, ys, names):
         color = 'blue'
         plt.scatter(x, y, c=color)
@@ -926,7 +989,7 @@ def cosine(myDir):
     linkage_matrix = ward(dist)
     dendrogram(linkage_matrix, orientation="right", labels=names);
     plt.tight_layout()  # fixes margins
-    plt.title("Dendogram")
+    plt.title("Dendogram using cosine distances between subcorpora")
     plt.show()
     print("Done! Exiting...")
     exit()
