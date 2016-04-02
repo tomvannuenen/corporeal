@@ -39,7 +39,10 @@ POS tags all words per file. User selects output:
 * One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
 * Multiple .txt files with the tagged texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
-User may then choose to filter POS output for nouns, pronouns or verbs.
+User may also choose to filter POS output for nouns, pronouns or verbs. Note however that this can also be done at a later point with the POS filter function.
+
+<h4>POS filter</h4>
+POS filter that takes in a folder with general POS-tagged files, created by the POS tagging function described above. It allows the user to filter these files for nouns, pronouns or verbs, and outputs a folder with these filtered files.  
 
 <h4>Lemmatization</h4>
 Lemmatizes all words per file. Slower than stemming, but more precise. User selects output:
@@ -50,7 +53,7 @@ Lemmatizes all words per file. Slower than stemming, but more precise. User sele
 Runs through all files and outputs word counts per subcorpus, as well as the total.
 
 <h4>Top words</h4>
-Runs through all files and outputs most-frequent words for the whole corpus. User is asked for number of words to be outputted.
+Runs through all files and outputs most-frequent words for the whole corpus. User can choose to make use of regular word tokens or POS-tagged word tokens, the latter allowing for a search for nouns, pronouns and verbs only. User is asked for number of words to be outputted.
 
 <h4>Word finder</h4>
 User is asked for word, output is two graphs:
@@ -59,7 +62,7 @@ User is asked for word, output is two graphs:
 User can opt for a .csv file with these relative frequencies of the word. 
 
 <h4>Lexical variety (means and TTR)</h4>
-Calculates and visualizes mean word use and TTF scores. User can choose to make use of regular word tokens or POS-tagged word tokens, if the user hasn't created a POS-tagged the corpus herself yet. The output consists of:
+Calculates and visualizes mean word use and TTF scores. User can choose to make use of regular word tokens or POS-tagged word tokens, if the user hasn't created a POS-tagged the corpus herself yet (note that this takes significantly longer, and that the user may wish to create POS-tagged files herself first). The output consists of:
 * Mean word frequency, i.e. the amount of word tokens divided by the amount of word types. The result is the average amount of times in which a word type is used in that file/subcorpus.
 * The Type-Token Ratio (TTR) score, i.e. the amount of word types dividied by the amount of word tokens, and its result multiplied by 100.
 * Bar chart output of compared means and TTR scores per subcorpus. 

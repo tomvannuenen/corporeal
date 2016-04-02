@@ -50,14 +50,15 @@ def main_menu(myDir):
     [1] for chunking
     [2] for stemming
     [3] for POS tagging / filtering
-    [4] for lemmatization
-    [5] for word count
-    [6] for top words 
-    [7] for word finder
-    [8] for lexical variety (means and TTR)
-    [9] for distinctive words
-    [10] for Euclidian distances
-    [11] for TF-IDF cosine distances
+    [4] for POS filtering 
+    [5] for lemmatization
+    [6] for word count
+    [7] for top words 
+    [8] for word finder
+    [9] for lexical variety (means and TTR)
+    [10] for distinctive words
+    [11] for Euclidian distances
+    [12] for TF-IDF cosine distances
     [x] to exit \n>>> """)
     if userInput == "1":
         chunking(myDir)
@@ -66,20 +67,22 @@ def main_menu(myDir):
     elif userInput == "3":
         tagger(myDir)
     elif userInput == "4":
-        lemmatizer(myDir)
+        pos_filter(myDir)
     elif userInput == "5":
+        lemmatizer(myDir)
+    elif userInput == "6":
         word_count(myDir)
-    elif userInput == "6":    
-        top_words(myDir)
     elif userInput == "7":    
+        top_words(myDir)
+    elif userInput == "8":    
         word_find(myDir)
-    elif userInput == "8":
-        lexical_variety(myDir)
     elif userInput == "9":
-        distinctive(myDir)
+        lexical_variety(myDir)
     elif userInput == "10":
-        euclidian(myDir)
+        distinctive(myDir)
     elif userInput == "11":
+        euclidian(myDir)
+    elif userInput == "12":
         cosine(myDir)
     elif userInput == "x" or "X":
         exit()
@@ -140,7 +143,7 @@ def get_tokens(fn):
         return tokens
 
 def get_POS_tokens(fn):
-    """Get POS-tagged tokens, presented as a list, for analysis.
+    """Get POS-tagged tokens, presented as a list, for analysis. Removes stopwords.
     The tokens are modified based on their POS."""
     # To check which tagger we're using
     # print(nltk.tag._POS_TAGGER)   
@@ -211,7 +214,7 @@ def stemmer(myDir):
         if userFile == "1":
             condOut = 1
         elif userFile == "2": 
-            stemTXTDir = myDir + "-stem-TXT"
+            stemTXTDir = myDir + "-stem"
             if not os.path.exists(stemTXTDir):
                 os.makedirs(stemTXTDir) 
             condOut = 2
@@ -283,22 +286,22 @@ def tagger(myDir):
     userFilter = input("Filter output by [1] none, [2] nouns, [3] pronouns or [4] verbs? \nTip: you can always filter at a later stage by using the POS filter function.\n>>> ")
     while condFilter == 0:
         if userFilter == "1": 
-            posTXTDir = myDir + "-POS-TXT"               
+            posTXTDir = myDir + "-POS"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
             condFilter = 1
         elif userFilter == "2": 
-            posTXTDir = myDir + "-POS-TXT-nouns"               
+            posTXTDir = myDir + "-POS-nouns"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
             condFilter = 2
         elif userFilter == "3": 
-            posTXTDir = myDir + "-POS-TXT-pronouns"               
+            posTXTDir = myDir + "-POS-pronouns"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
             condFilter = 3
         elif userFilter == "4": 
-            posTXTDir = myDir + "-POS-TXT-verbs"               
+            posTXTDir = myDir + "-POS-verbs"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
             condFilter = 3
@@ -350,47 +353,58 @@ def tagger(myDir):
     print("Done! Exiting...")
     exit()
 
-#def pos_filter (myDir):
-#    """Filters POS-tagged folder of files by nouns, verbs or pronouns"""
-#    fileList, noFiles = list_textfiles(myDir)    
-#    realList = []
-#    condFilter = 0
-#    userFilter = input("Filter output by [1] nouns, [2] pronouns or [3] verbs?\n>>> ")
-#    while condFilter == 0:
-#        if userFilter == "1": 
-#            posTXTDir = myDir + "-nouns"               
-#            if not os.path.exists(posTXTDir):
-#                os.makedirs(posTXTDir)  
-#            for filePath in fileList:
-#                tokens = get_tokens(filePath)
-#                for token in tokens:
-#                    if "NN" in token[-2:-1]:
-#                        realList.append(token)        
-#            condFilter = 1        
-#        elif userFilter == "2": 
-#            posTXTDir = myDir + "-pronouns"               
-#            if not os.path.exists(posTXTDir):
-#                os.makedirs(posTXTDir)  
-#            for filePath in fileList:
-#                tokens = get_tokens(filePath)
-#                for token in tokens:
-#                    if "JJ" in token[-2:-1]:
-#                        realList.append(token)
-#            condFilter = 2
-#        elif userFilter == "3": 
-#            posTXTDir = myDir + "-verbs"               
-#            if not os.path.exists(posTXTDir):
-#                os.makedirs(posTXTDir)  
-#            for filePath in fileList:
-#                tokens = get_tokens(filePath)
-#                for token in tokens:
-#                    if "VB" or "VBN" or "VBP" or "VBD" in token[-2:-1]:
-#                        realList.append(token)
-#            condFilter = 3
-#        else:
-#            userFilter = input("Please try again! \n>>> ")
-#            continue 
-#    print(realList)
+def pos_filter (myDir):
+    """Filters POS-tagged folder of files by nouns, verbs or pronouns"""
+    fileList, noFiles = list_textfiles(myDir)    
+    testTokens = open(fileList[1]).read().split()   
+    testCounter = 0
+    for token in testTokens:
+        if token[-2:] == "NN" or token[-2:] == "JJ" or token[-3:] == "VBN" or token[-3:] == "VBP" or token[-3:] == "VBD":
+            testCounter += 1
+    if testCounter < 5:
+        print("The files in this folder are not POS-tagged! Exiting.")
+        exit()
+    realList = []
+    userFilter = input("Filter output by [1] nouns, [2] pronouns or [3] verbs?\n>>> ")
+    if userFilter != "1" and userFilter != "2" and userFilter != "3": 
+        userFilter = input("Please try again!\n>>> ")
+    elif userFilter == "1": 
+        posTXTDir = myDir + "-nouns"               
+        if not os.path.exists(posTXTDir):
+            os.makedirs(posTXTDir)  
+        for filePath in fileList:
+            fSmall = os.path.split(filePath)[1] 
+            fName = os.path.splitext(fSmall)[0]
+            tokens = open(filePath).read().split()  
+            realList = [word for word in tokens if word[-2:] == "NN"]
+            with open(os.curdir + "/" + myDir + "-nouns" + "/" + fSmall, "w") as f:
+                    f.write(' '.join(realList)) 
+    elif userFilter == "2": 
+        posTXTDir = myDir + "-pronouns"               
+        if not os.path.exists(posTXTDir):
+            os.makedirs(posTXTDir)  
+        for filePath in fileList:
+            fSmall = os.path.split(filePath)[1] 
+            fName = os.path.splitext(fSmall)[0]
+            tokens = open(filePath).read().split()  
+            realList = [word for word in tokens if word[-2:] == "JJ"]        
+            with open(os.curdir + "/" + myDir + "-pronouns" + "/" + fSmall, "w") as f:
+                    f.write(' '.join(realList)) 
+    elif userFilter == "3": 
+        posTXTDir = myDir + "-verbs"               
+        if not os.path.exists(posTXTDir):
+            os.makedirs(posTXTDir)  
+        for filePath in fileList:
+            fSmall = os.path.split(filePath)[1] 
+            fName = os.path.splitext(fSmall)[0]
+            tokens = open(filePath).read().split()  
+            allWords1 = [word for word in tokens if word[-2:] == "VB"]
+            allWords2 = [word for word in tokens if word[-3:] == "VBN" or word[-3:] == "VBP" or word[-3:] == "VBD"]
+            realList = allWords1 + allWords2
+            with open(os.curdir + "/" + myDir + "-verbs" + "/" + fSmall, "w") as f:
+                    f.write(' '.join(realList)) 
+    print("Done! Exiting...")
+    exit()    
 
 def lemmatizer(myDir):
     """Lemmatizes words. Creates directory in current directory with lemmatized texts, or a .csv file with top 100 lemmas."""
@@ -401,7 +415,7 @@ def lemmatizer(myDir):
         if userFile == "1":
             condOut = 1
         elif userFile == "2": 
-            lemmaTXTDir = myDir + "-lemma-TXT"               
+            lemmaTXTDir = myDir + "-lemma"               
             if not os.path.exists(lemmaTXTDir):
                 os.makedirs(lemmaTXTDir)  
             condOut = 2
@@ -425,7 +439,7 @@ def lemmatizer(myDir):
         tokens = get_tokens(filePath)
         if condStop == 1:
             filtered = [w for w in tokens if not w in stopwords.words('english')]
-        if condStop ==2:
+        if condStop == 2:
             filtered = tokens
         lemmaList = [lmtzr.lemmatize(w) for w in filtered]
         lemmaString = ' '.join(lemmaList)
@@ -506,28 +520,50 @@ def top_words(myDir):
             continue
     allWords = []
     fileList, noFiles = list_textfiles(myDir)
+    tokensCond = 0
+    userTokens = input("Do you want to find [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
+    valid = ["1", "2"]
+    if userTokens in valid:
+        tokensCond = int(userTokens)
+    else:
+        print("Please try again.")
     for filePath in fileList:
-        with open(filePath, 'r') as f:
-            text = f.read()
-        wordList = text.lower().split()
-        allWords.extend(wordList)
-    # Create a frequency distribution
-    allWords = [word for word in allWords if len(word) > 1]
+        if tokensCond == 1:
+            words = get_tokens(filePath)
+            allWords.extend(words)
+        elif tokensCond == 2:
+            words = get_POS_tokens(filePath)
+            allWords.extend(words)
+    posCond = 0 # This will hold the type of POS we're after
+    if tokensCond == 2:    
+        userPOS = input("Do you want to find [1] nouns, [2] pronouns, or [3] verbs?\n>>> ")
+        valid = ["1", "2", "3"]
+        if userPOS in valid:
+            posCond = int(userPOS)        
+    if posCond == 0:
+        allWords = [word for word in allWords if len(word) > 1]
+    elif posCond == 1:
+        allWords = [word[:-2] for word in allWords if word[-2:] == "NN"]
+    elif posCond == 2:
+        allWords = [word[:-2] for word in allWords if word[-2:] == "JJ"]        
+    elif posCond == 3:
+        allWords1 = [word[:-2] for word in allWords if word[-2:] == "VB"]
+        allWords2 = [word[:-3] for word in allWords if word[-3:] == "VBN" or word[-3:] == "VBP" or word[-3:] == "VBD"]
+        allWords = allWords1 + allWords2
     condStop = 0
-    inp2 = input("Remove stopwords? (EN only)\n>>> ").lower()
-    while condStop == 0:
-        if inp2 == "no" or inp2 == "n":
-            words = allWords
-            condStop = 1
-        elif inp2 == "yes" or inp2 == "y":
-            stopWords = set(stopwords.words('english'))
-            cleanWords = [w for w in allWords if not w in stopWords]
-            words = cleanWords
-            condStop = 2    
-        else:
-            inp2 = input("please enter 'yes' or 'no'!\n>>> ").lower()
-            continue
-    fdist = nltk.FreqDist(words)
+    if posCond == 0:
+        inp2 = input("Remove stopwords? (EN only)\n>>> ").lower()
+        while condStop == 0:
+            if inp2 == "no" or inp2 == "n":
+                condStop = 1
+            elif inp2 == "yes" or inp2 == "y":
+                stopWords = set(stopwords.words('english'))
+                allWords = [w for w in allWords if not w in stopWords]
+                condStop = 2    
+            else:
+                inp2 = input("please enter 'yes' or 'no'!\n>>> ").lower()
+                continue    
+    fdist = nltk.FreqDist(allWords)
     # Show the top N words in the list, with counts
     print("TOP N WORDS IN CORPUS")
     print('%-*s %s' % (20, "Word", "Frequency"))
