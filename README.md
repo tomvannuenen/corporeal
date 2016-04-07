@@ -15,6 +15,9 @@ Navigate to the folder Corporeal is located in, and enter `python corporeal.py`.
 
 Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User should enter a directory name starting from current.
 
+Corporeal uses simple command-line commands. Answering its questions, it expects either a number (indicated by `INT` in the response line), a string (indicated by `STR`) or a simple yes/no (indicated by `Y/N`). Characters are case insensitive.
+
+
 *E.g. "data/combi"*
 
 Corporeal expects to find .txt files in this data folder, preferrably titled by subcorpus, and optionally with an en-dash to identify separate parts of the subcorpus (if the corpus has not been segmented yet, Corporeal can do that for you).

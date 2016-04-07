@@ -153,6 +153,9 @@ def get_POS_tokens(fn):
         lowers = text.lower()
         no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
         tokens = no_punctuation.split()
+        # Results of this tagger could be improved with some extra rules.
+        # Words like "get", "see" should be verbs; conjunctions like "i'm" don't
+        # tag well yet either 
         pos = nltk.pos_tag(tokens)
         posTokens = []
         for tup in pos:
@@ -182,7 +185,7 @@ def chunking(myDir):
     fileList, noFiles = list_textfiles(myDir)
     chunks = []
     try:
-        chunkLength = int(input("how many words should each chunks be? Enter a number\n(suggested: 500-1000).\n>>> "))
+        chunkLength = int(input("how many words should each chunks be? Enter a number\n(suggested: 500-1000).\nINT>>> "))
     except ValueError:
         print("Please enter a number")
         chunking(myDir)
@@ -209,7 +212,7 @@ def stemmer(myDir):
     """Stems words. Creates directory in current directory with stemmed texts, or a single .csv file with top 100 stemmed words."""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
-    userFile = input("""Do you want [1] a .csv file with top stemmed counts or [2] .txt files with\nstemmed texts (useable as input for other functions)?\n>>> """)
+    userFile = input("""Do you want [1] a .csv file with top stemmed counts or [2] .txt files with\nstemmed texts (useable as input for other functions)?\nINT>>> """)
     while condOut == 0:
         if userFile == "1":
             condOut = 1
@@ -221,11 +224,13 @@ def stemmer(myDir):
         else:
             continue        
     condStop = 0
-    userStop = input("Remove stopwords?\n>>> ").lower()
+    userStop = input("Remove stopwords?\nY/N>>> ").lower()
     while condStop == 0:
-        if userStop == "yes" or "y":
+        if userStop == "yes" or userStop == "y" or userStop == "yep":
+            print("Removing stopwords...")
             condStop = 1
-        elif userStop == "no" or "n": 
+        elif userStop == "no" or userStop == "n" or userStop == "nope": 
+            print("Leaving stopwords alone...")
             condStop = 2
         else:
             continue      
@@ -264,7 +269,7 @@ def tagger(myDir):
     with top 100 tagged words. Can also filter corpus by POS tags"""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
-    userFile = input("""Do you want [1] a .csv file with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\n>>> """)
+    userFile = input("""Do you want [1] a .csv file with top tagged counts or [2] .txt files with\ntagged texts (useable as input for other functions)?\nINT>>> """)
     while condOut == 0:
         if userFile == "1":
             condOut = 1
@@ -275,15 +280,17 @@ def tagger(myDir):
             continue        
     condStop = 0
     while condStop == 0:
-        userStop = input("Remove stopwords?\n>>> ").lower()
-        if userStop == "yes" or "y":
+        userStop = input("Remove stopwords?\nY/N>>> ").lower()
+        if userStop == "yes" or userStop == "y":
+            print("Removing stopwords...")
             condStop = 1
-        if userStop == "no" or "n": 
+        if userStop == "no" or userStop == "n": 
+            print("Leaving stopwords alone...")
             condStop = 2
         else:
             continue   
     condFilter = 0
-    userFilter = input("Filter output by [1] none, [2] nouns, [3] pronouns or [4] verbs? \nTip: you can always filter at a later stage by using the POS filter function.\n>>> ")
+    userFilter = input("Filter output by [1] none, [2] nouns, [3] pronouns or [4] verbs? \nTip: you can always filter at a later stage by using the POS filter function.\nINT>>> ")
     while condFilter == 0:
         if userFilter == "1": 
             posTXTDir = myDir + "-POS"               
@@ -306,7 +313,7 @@ def tagger(myDir):
                 os.makedirs(posTXTDir)  
             condFilter = 3
         else:
-            userFilter = input("Please try again!\n>>> ")
+            userFilter = input("Please try again!\nINT>>> ")
             continue
     totalPOSlist = []
     for filePath in fileList:
@@ -365,9 +372,9 @@ def pos_filter (myDir):
         print("The files in this folder are not POS-tagged! Exiting.")
         exit()
     realList = []
-    userFilter = input("Filter output by [1] nouns, [2] pronouns or [3] verbs?\n>>> ")
+    userFilter = input("Filter output by [1] nouns, [2] pronouns or [3] verbs?\nINT>>> ")
     if userFilter != "1" and userFilter != "2" and userFilter != "3": 
-        userFilter = input("Please try again!\n>>> ")
+        userFilter = input("Please try again!\nINT>>> ")
     elif userFilter == "1": 
         posTXTDir = myDir + "-nouns"               
         if not os.path.exists(posTXTDir):
@@ -410,7 +417,7 @@ def lemmatizer(myDir):
     """Lemmatizes words. Creates directory in current directory with lemmatized texts, or a .csv file with top 100 lemmas."""
     fileList, noFiles = list_textfiles(myDir)
     condOut = 0
-    userFile = input("""Do you want [1] a .csv file with top lemmas or [2] .txt files with\n lemmatized texts (useable as input for other functions)?\n>>> """)
+    userFile = input("""Do you want [1] a .csv file with top lemmas or [2] .txt files with\n lemmatized texts (useable as input for other functions)?\nINT>>> """)
     while condOut == 0:
         if userFile == "1":
             condOut = 1
@@ -422,14 +429,16 @@ def lemmatizer(myDir):
         else:
             continue        
     condStop = 0
-    userStop = input("Remove stopwords?\n>>> ").lower()
+    userStop = input("Remove stopwords?\nY/N>>> ").lower()
     while condStop == 0:
-        if userStop == "yes" or "y":
+        if userStop == "yes" or userStop == "y" or userStop == "yep":
+            print("Removing stopwords...")
             condStop = 1
-        elif userStop == "no" or "n": 
+        elif userStop == "no" or userStop == "n" or userStop == "nope": 
+            print("Leaving stopwords alone...")
             condStop = 2
         else:
-            userStop = input("Please try again!\n>>> ").lower()
+            userStop = input("Please try again!\nY/N>>> ").lower()
             continue  
     totalLemmaList = []
     lmtzr = WordNetLemmatizer()
@@ -499,7 +508,7 @@ def word_count(myDir):
 
 def top_words(myDir):
     """finds top N words, based on user input"""
-    inp = input("How many top words should I find? \n>>> ")
+    inp = input("How many top words should I find? \nINT>>> ")
     try:
        val = int(inp)
     except ValueError:
@@ -507,10 +516,11 @@ def top_words(myDir):
        top_words()
     condCSV = 0
     while condCSV == 0:
-        userAns = input("Do you want a .csv file with the top words?\n>>> ").lower()
-        if userAns == "no" or userAns == "n":
+        userAns = input("Do you want a .csv file with the top words?\nY/N>>> ").lower()
+        if userAns == "no" or userAns == "n" or userAns == "nope":
             condCSV = 1
-        elif userAns == "yes" or userAns == "y":
+        elif userAns == "yes" or userAns == "y" or userAns == "yep":
+            print("Creating .csv...")
             outFile = "top_words.csv"
             f = open(outFile, "a", newline='')
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
@@ -521,47 +531,59 @@ def top_words(myDir):
     allWords = []
     fileList, noFiles = list_textfiles(myDir)
     tokensCond = 0
-    userTokens = input("Do you want to find [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
-    valid = ["1", "2"]
-    if userTokens in valid:
-        tokensCond = int(userTokens)
-    else:
-        print("Please try again.")
-    for filePath in fileList:
-        if tokensCond == 1:
+    userTokens = input("Should I POS-tag the tokens first?\nY/N>>> ").lower()
+    while tokensCond == 0:
+        if userTokens == "yes" or userTokens == "y" or userTokens == "yep":
+            print("POS tagging...")
+            tokensCond = 1
+        elif userTokens == "no" or userTokens == "n" or userTokens == "nope": 
+            print("Using regular tokens...")
+            tokensCond = 2
+        else:
+            userTokens = input("Please answer yes or no!\nY/N>>> ").lower()   
+    if tokensCond == 1:
+        for filePath in fileList:
+                words = get_POS_tokens(filePath)
+                allWords.extend(words)
+    elif tokensCond == 2:
+        for filePath in fileList:
             words = get_tokens(filePath)
             allWords.extend(words)
-        elif tokensCond == 2:
-            words = get_POS_tokens(filePath)
-            allWords.extend(words)
     posCond = 0 # This will hold the type of POS we're after
-    if tokensCond == 2:    
-        userPOS = input("Do you want to find [1] nouns, [2] pronouns, or [3] verbs?\n>>> ")
+    if tokensCond == 1:    
+        userPOS = input("Do you want to filter for [1] nouns, [2] pronouns, or [3] verbs?\nINT>>> ")
         valid = ["1", "2", "3"]
         if userPOS in valid:
-            posCond = int(userPOS)        
+            posCond = int(userPOS)
+        else:
+            userPOS = input("Please try again!\nINT>>> ")
     if posCond == 0:
         allWords = [word for word in allWords if len(word) > 1]
     elif posCond == 1:
+        print("Looking for nouns...")
         allWords = [word[:-2] for word in allWords if word[-2:] == "NN"]
     elif posCond == 2:
+        print("Looking for pronouns...")
         allWords = [word[:-2] for word in allWords if word[-2:] == "JJ"]        
     elif posCond == 3:
+        print("Looking for verbs...")
         allWords1 = [word[:-2] for word in allWords if word[-2:] == "VB"]
         allWords2 = [word[:-3] for word in allWords if word[-3:] == "VBN" or word[-3:] == "VBP" or word[-3:] == "VBD"]
         allWords = allWords1 + allWords2
     condStop = 0
     if posCond == 0:
-        inp2 = input("Remove stopwords? (EN only)\n>>> ").lower()
+        inp2 = input("Remove stopwords? (EN only)\nY/N>>> ").lower()
         while condStop == 0:
             if inp2 == "no" or inp2 == "n":
+                print("Leaving stopwords alone...")
                 condStop = 1
             elif inp2 == "yes" or inp2 == "y":
+                print("Removing stopwords...")
                 stopWords = set(stopwords.words('english'))
                 allWords = [w for w in allWords if not w in stopWords]
                 condStop = 2    
             else:
-                inp2 = input("please enter 'yes' or 'no'!\n>>> ").lower()
+                inp2 = input("please enter 'yes' or 'no'!\nY/N>>> ").lower()
                 continue    
     fdist = nltk.FreqDist(allWords)
     # Show the top N words in the list, with counts
@@ -579,20 +601,21 @@ def top_words(myDir):
 def word_find(myDir):
     """finds word of choice; generates a .csv file with (relative) frequencies,
     as well as two plots"""
-    myWord = input("What word should I look for?\n>>> ").lower()    
+    myWord = input("What word should I look for?\nSTR>>> ").lower()    
     cond = 0
-    userFile = input("Do you want a .csv file with (relative) frequencies of the word?\n>>> ").lower()
+    userFile = input("Do you want a .csv file with (relative) frequencies of the word?\nY/N>>> ").lower()
     while cond == 0:
-        if userFile == "yes" or userFile == "y":
+        if userFile == "yes" or userFile == "y" or userFile == "yep":
+            print("Creating .csv file...")
             outFile = "relative_word_freq-" + myWord + ".csv"
             f = open(outFile, "a", newline='')
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow( ("filename", "wordcount", "word: %s" % myWord, "relFreq: %s" % myWord, "relFreqTotal: %s" % myWord) )    
             cond = 2
-        elif userFile == "no" or userFile == "n":
+        elif userFile == "no" or userFile == "n" or userFile == "nope":
             cond = 1
         else:
-            userFile = input("Please try again!\n>>> ").lower()
+            userFile = input("Please try again!\nY/N>>> ").lower()
             continue
     totalMyWord = 0
     totalWords = 0
@@ -677,6 +700,18 @@ def word_find(myDir):
     print("Done! Exiting...")
     exit()
 
+#def word_cluster(myDir):
+#    """finds cluster based on word of choice. User selects size of cluster."""
+#    fileList, noFiles = list_textfiles(myDir)
+#    myWord = input("What word should I look for?\n>>> ").lower()    
+#    concN = input("How many words around the ")
+#
+#    for filePath in fileList:
+#        FIND THE N-GRAMS
+#        FIND THE MFW AROUND THE WORDS
+
+
+
 def lexical_variety(myDir):
     """Calculates and visualizes mean word use and TTF scores. If input is a hyphened series of chunks,
     the output is organized per subcorpus"""
@@ -687,24 +722,25 @@ def lexical_variety(myDir):
     else:
         print("Found unsplit subcorpora in folder. If the files are big, consider splitting them \nusing Corporeal's chunking function.")
     cond = 0
-    userFile = input("Do you want a .csv file with means and TTF scores per file?\n>>> ").lower()
+    userFile = input("Do you want a .csv file with means and TTF scores per file?\nY/N>>> ").lower()
     while cond == 0:
-        if userFile == "yes" or userFile == "y":
+        if userFile == "yes" or userFile == "y" or userFile == "yep":
+            print("Creating .csv file...")
             outFile = "lexical_variety_split.csv"
             f = open(outFile, "a", newline='')
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow( ("filename", "mean", "TTF") )    
             cond = 2
-        elif userFile == "no" or userFile == "n":
+        elif userFile == "no" or userFile == "n" or userFile == "nope":
             cond = 1
         else:
-            userFile = input("Please try again!\n>>> ").lower()
+            userFile = input("Please try again!\nY/N>>> ").lower()
     totalWordCounter = 0
     totalTypeCounter = 0
     allMeans = {}
     allTTR = {}
     tokensCond = 0
-    userTokens = input("Do you want to use [1] regular tokens or [2] POS-tagged tokens?\n>>> ")
+    userTokens = input("Do you want to use [1] regular tokens or [2] POS-tagged tokens?\nINT>>> ")
     valid = ["1", "2"]
     if userTokens in valid:
         tokensCond = int(userTokens)
@@ -805,7 +841,7 @@ def distinctive(myDir):
     rest of the corpus. We calculate the difference between the rates to calculate their
     distinciveness in the subcorpus that the user enters"""
     fileList, noFiles = list_textfiles(myDir)
-    userName = input("Please enter name of subcorpus you want to see distinctive features of\n (e.g. 'Austen')\n>>> ").lower()  
+    userName = input("Please enter name of subcorpus you want to see distinctive features of\n (e.g. 'Austen')\nSTR>>> ").lower()  
     testDir = []
     for i in fileList:
         fSmall = os.path.split(i)[1] 
@@ -818,7 +854,7 @@ def distinctive(myDir):
     if userName not in testDir:
         print("That name does not seem to exist in this folder.. Try again.")
         distinctive(myDir)
-    userNo = input("How many distinctive features should I find?\n>>> ").lower()
+    userNo = input("How many distinctive features should I find?\nINT>>> ")
     try:
        val = int(userNo)
     except ValueError:
@@ -826,10 +862,11 @@ def distinctive(myDir):
        distinctive(myDir)    
     condCSV = 0
     while condCSV == 0:
-        userAns = input("Do you want a .csv file with the top words?\n>>> ").lower()
-        if userAns == "no" or userAns == "n":
+        userAns = input("Do you want a .csv file with the top words?\nY/N>>> ").lower()
+        if userAns == "no" or userAns == "n" or userAns == "nope":
             condCSV = 1
-        elif userAns == "yes" or userAns == "y":
+        elif userAns == "yes" or userAns == "y" or userAns == "yep":
+            print("Creating .csv file...")
             outFile = "distinctive_words-" + userName + ".csv"
             # We could add a condition here that if the file exists, ask user to overwrite            
             f = open(outFile, "a", newline='')
