@@ -14,6 +14,8 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import *
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
+from nltk import bigrams
+from nltk import trigrams
 from sklearn.feature_extraction.text import CountVectorizer
 from unicodedata import category
 import matplotlib.pyplot as plt
@@ -55,10 +57,12 @@ def main_menu(myDir):
     [6] for word count
     [7] for top words 
     [8] for word finder
-    [9] for lexical variety (means and TTR)
-    [10] for distinctive words
-    [11] for Euclidian distances
-    [12] for TF-IDF cosine distances
+    [9] for concordances
+    [10] for top clusters (bi- or trigrams)
+    [11] for lexical variety (means and TTR)
+    [12] for distinctive words
+    [13] for Euclidian distances
+    [14] for TF-IDF cosine distances
     [x] to exit \n>>> """)
     if userInput == "1":
         chunking(myDir)
@@ -77,12 +81,16 @@ def main_menu(myDir):
     elif userInput == "8":    
         word_find(myDir)
     elif userInput == "9":
-        lexical_variety(myDir)
+        concordance(myDir)
     elif userInput == "10":
-        distinctive(myDir)
+        cluster(myDir)
     elif userInput == "11":
-        euclidian(myDir)
+        lexical_variety(myDir)
     elif userInput == "12":
+        distinctive(myDir)
+    elif userInput == "13":
+        euclidian(myDir)
+    elif userInput == "14":
         cosine(myDir)
     elif userInput == "x" or "X":
         exit()
@@ -700,18 +708,70 @@ def word_find(myDir):
     print("Done! Exiting...")
     exit()
 
-#def word_cluster(myDir):
-#    """finds cluster based on word of choice. User selects size of cluster."""
-#    fileList, noFiles = list_textfiles(myDir)
-#    myWord = input("What word should I look for?\n>>> ").lower()    
-#    concN = input("How many words around the ")
-#
-#    for filePath in fileList:
-#        FIND THE N-GRAMS
-#        FIND THE MFW AROUND THE WORDS
-
-
-
+def concordance(myDir):
+    """Prints concordances of a chosen word, iterating randomly through the
+    corpus"""
+    import random 
+    fileList, noFiles = list_textfiles(myDir)
+    random.shuffle(fileList)
+    userWord = input("Which word do you want to see the concordance of?\nSTR>>> ").lower()
+    totalTokens = []
+    for filePath in fileList:
+        tokens = get_tokens(filePath)
+        x = None
+        if userWord in tokens:  
+            text = nltk.Text(tokens)
+            print(str(filePath))
+            print(text.concordance(userWord))
+            x = input("Press ENTER to continue or X to exit").lower()
+            if x == "x":
+                exit()
+            elif x != None:
+                continue
+    
+def cluster(myDir):
+    """Finds cluster based on word of choice. User selects bi- or trigram."""
+    fileList, noFiles = list_textfiles(myDir)
+    userWord = input("What word do you want to see the lexical cluster of?\nSTR>>> ").lower()    
+    gramCond = 0
+    userGram = input("Do you want [1] bigrams or [2] trigrams?\nINT>>> ")
+    valid = ["1", "2"]
+    while gramCond == 0:
+        if userGram in valid:
+            gramCond = int(userGram)
+        else:
+            userGram = input("Please try again.\nINT>>> ")
+    noCond = 0
+    userNo = input("How many top clusters (between 1 and 100) should I find?\nINT>>> ")
+    while noCond == 0:
+        valid = [str(n) for n in range(1,100)]
+        if userNo in valid:
+            noCond = int(userNo)
+        else:
+            userNo = input("Please try again.\nINT>>> ")
+    totalTokens = []
+    for filePath in fileList:
+        tokens = get_tokens(filePath)
+        if userWord in tokens:
+            totalTokens.extend(tokens)
+    if gramCond == 1:
+        biTokens = bigrams(totalTokens)
+        # count which ones appear most frequently
+        biList = [item for item in biTokens if userWord in item]
+        biCounter = Counter(biList)
+        biCommon = biCounter.most_common(noCond)        
+        print('%-*s %-*s %s' % (10, "Word 1", 10, "Word 2", "Freq"))
+        for words, freq in biCommon:            
+            print('%-*s %-*s %s' % (10, str(words[0]), 10, str(words[1]), freq))  
+    else:
+        triTokens = trigrams(totalTokens)
+        triList = [item for item in triTokens if userWord in item]
+        triCounter = Counter(triList)
+        triCommon = triCounter.most_common(noCond)        
+        print('%-*s %-*s %-*s %s' % (10, "Word 1", 10, "Word 2", 10, "Word 3", "Freq"))
+        for words, freq in triCommon:            
+            print('%-*s %-*s %-*s %s' % (10, str(words[0]), 10, str(words[1]), 10, str(words[2]), freq))          
+        
 def lexical_variety(myDir):
     """Calculates and visualizes mean word use and TTF scores. If input is a hyphened series of chunks,
     the output is organized per subcorpus"""

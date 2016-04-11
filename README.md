@@ -64,6 +64,12 @@ User is asked for word, output is two graphs:
 * The relative frequency of the search word, normalized to the total amount of that word in the entire corpus.
 User can opt for a .csv file with these relative frequencies of the word. 
 
+<h4>Concordances</h4>
+User is asked for a word. Output is the lexical context of this chosen word per file in the subcorpus. The program iterates randomly through the corpus (instead of alphabetically, as with the other functions): this can be useful if you want to manually check the lexical context of a certain word in the corpus.
+
+<h4>Top clusters (bi- or trigrams)</h4>
+User is asked for a word and whether to look for bi- or trigrams. The program searches through the entire corpus and finally outputs the top-N most frequent bi- or trigrams involving the chosen word. User selects how many top bi- or trigrams are found (between 1 and 100).
+
 <h4>Lexical variety (means and TTR)</h4>
 Calculates and visualizes mean word use and TTF scores. User can choose to make use of regular word tokens or POS-tagged word tokens, if the user hasn't created a POS-tagged the corpus herself yet (note that this takes significantly longer, and that the user may wish to create POS-tagged files herself first). The output consists of:
 * Mean word frequency, i.e. the amount of word tokens divided by the amount of word types. The result is the average amount of times in which a word type is used in that file/subcorpus.
