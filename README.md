@@ -1,12 +1,12 @@
 Corporeal
 ========================
 
-An interactive command-line Python package for transforming, ordering and visualizing text corpora, for Python 3 (tested only on mac). Current version is pre-alpha, still under construction. Please let me know about any bugs you may find.
+An interactive command-line Python package for transforming, ordering and visualizing text corpora. Current version is pre-alpha, still under construction. Please let me know about any bugs you may find.
 
 
 <h2> Requirements </h2>
 
-Corporeal uses a few well-known Python packages. Check requirements.txt and use your favorite package manager to install these. Pip-users (https://pypi.python.org/pypi/pip) may run getRequirements (.sh) from terminal to get pip to install the packages.
+Corporeal runs on Python 3 and uses a few well-known packages. Users may consider downloading the Anaconda Python distribution (https://www.continuum.io/downloads) which includes all of these packages. If you already have Python 3 installed, you can also check requirements.txt and use your favorite package manager to install the dependencies. Pip-users (https://pypi.python.org/pypi/pip) may run getRequirements (.sh) from terminal to get pip to install the packages.
 
 
 <h2> Usage </h2>
