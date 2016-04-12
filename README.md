@@ -65,7 +65,7 @@ User is asked for word, output is two graphs:
 User can opt for a .csv file with these relative frequencies of the word. 
 
 <h4>Concordances</h4>
-User is asked for a word. Output is the lexical context of this chosen word per file in the subcorpus. The program iterates randomly through the corpus (instead of alphabetically, as with the other functions): this can be useful if you want to manually check the lexical context of a certain word in the corpus.
+User is asked for a word. Output is the lexical context of this chosen word per file in the subcorpus. The program can iterate alphabetically or randomly through the corpus: the latter is useful if you want to manually review the lexical context of a certain word in the corpus.
 
 <h4>Top clusters (bi- or trigrams)</h4>
 User is asked for a word and whether to look for bi- or trigrams. The program searches through the entire corpus and finally outputs the top-N most frequent bi- or trigrams involving the chosen word. User selects how many top bi- or trigrams are found (between 1 and 100).

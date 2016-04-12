@@ -46,23 +46,26 @@ def main():
             continue 
     
 def main_menu(myDir):
-    """Main menu the user starts off in"""
     fileList, noFiles = list_textfiles(myDir)
     userInput = input("""Please select:
+    --- PREPROCESSING -----------------------
     [1] for chunking
     [2] for stemming
     [3] for POS tagging / filtering
     [4] for POS filtering 
     [5] for lemmatization
+    --- TEXT ANALYSIS -----------------------
     [6] for word count
     [7] for top words 
     [8] for word finder
     [9] for concordances
     [10] for top clusters (bi- or trigrams)
-    [11] for lexical variety (means and TTR)
-    [12] for distinctive words
+    [11] for distinctive words
+    --- GRAPH OUTPUT -----------------------
+    [12] for lexical variety (means and TTR)
     [13] for Euclidian distances
     [14] for TF-IDF cosine distances
+    ----------------------------------------
     [x] to exit \n>>> """)
     if userInput == "1":
         chunking(myDir)
@@ -85,9 +88,9 @@ def main_menu(myDir):
     elif userInput == "10":
         cluster(myDir)
     elif userInput == "11":
-        lexical_variety(myDir)
-    elif userInput == "12":
         distinctive(myDir)
+    elif userInput == "12":
+        lexical_variety(myDir)
     elif userInput == "13":
         euclidian(myDir)
     elif userInput == "14":
@@ -120,7 +123,7 @@ def read_file(filename):
     return contents
 
 def split_text(filePath, n_words):    
-    """Split text into chunks. Used in chunking function"""
+    """Split text into chunks. Used in chunking function."""
     tokens = get_tokens(filePath)  
     chunks = []
     current_chunk_words = []
@@ -136,7 +139,7 @@ def split_text(filePath, n_words):
     return chunks
 
 def get_tokens(fn):
-    """Get tokens, presented as a list, for analysis"""
+    """Get tokens, presented as a list, for analysis."""
     with open(fn, 'r') as f:
         text = f.read()
         lowers = text.lower()
@@ -713,8 +716,18 @@ def concordance(myDir):
     corpus"""
     import random 
     fileList, noFiles = list_textfiles(myDir)
-    random.shuffle(fileList)
     userWord = input("Which word do you want to see the concordance of?\nSTR>>> ").lower()
+    sortCond = 0
+    userSort = input("Should I iterate through the subcorpora [1] alphabetically or [2] randomly?\nINT>>> ")
+    while sortCond == 0:
+        valid = ["1", "2"]
+        if userSort in valid:
+            if userSort == "2":
+                random.shuffle(fileList)
+            sortCond = 1 
+            print("hello?")
+        else:
+            userSort = input("Please try again.\nINT>>> ")
     totalTokens = []
     for filePath in fileList:
         tokens = get_tokens(filePath)
