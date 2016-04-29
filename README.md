@@ -24,6 +24,10 @@ Corporeal expects to find .txt files in this data folder, preferrably titled by 
 
 *E.g. "Austen.txt", "James.txt" or "Austen-1.txt" to "Austen-112.txt"*
 
+You can sort the subcorpora however you want: for instance, you might want to sort not by author but by year so that you can compare textual features through time.
+
+*E.g. "2012-001.txt" to "2015-112.txt"*
+
 Note that Corporeal expects to be used for parsing English texts (in terms of  stopword removal and tokenizing); inputting other languages may yield less desirable results.
 
 

@@ -20,15 +20,35 @@ from sklearn.feature_extraction.text import CountVectorizer
 from unicodedata import category
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from gensim import corpora, models, similarities
 plt.style.use('ggplot')
 
 def main():
     print("-------------------------------")
-    print("CORPOREAL 0.3, by Tom van Nuenen")
+    print("CORPOREAL 0.5, by Tom van Nuenen")
     print("-------------------------------")   
-    print("Press CTRL-C at any time to quit\n")       
+    folder()
+
+def folder():
+    if os.path.exists("userFav.txt"):
+        myDict = {}
+        number = 0
+        with open("userFav.txt", "r") as f:
+            myDir = f.readline()
+        #    for line in f:
+        #        number += 1
+        #        myDict[number] = line
+        #print("User favorites found:")
+        #for key, value in myDict.items():
+        #    print('%-*s %s' % (5, key, value))
+        #myChoice = input("Choose which one to use.\nINT>>> ")
+        ## connect myChoice number to corresponding value in myDict, that value is myDir variable
+        #myDir = myDict        
+        #myChoice
+        print("Using favorited folder: " + myDir)
+        main_menu(myDir)
     goOn = 0
-    myDir = input("Please enter directory name containing .txt files. \nExample: data/data-folder \nIts files may be named with a hypen between subcorpus and id. \nExamples: austen-102.txt, houellebecq-1.txt, fullcorpus.txt\n>>> ")
+    myDir = input("Please enter directory name containing .txt files.\nSee README for detailed instructions.\nSTR>>> ")
     while goOn == 0:
         if os.path.isdir(myDir):
             fileList, fileNo = list_textfiles(myDir)
@@ -36,70 +56,102 @@ def main():
                 print("There are no .txt files in this folder. Exiting...")
                 exit()        
             if fileNo == 1:
+                print("Counting files...")
                 print("This folder contains " + str(fileNo) + " file: " + fileList[0].split("/")[-1])
             if fileNo > 1:
-                print("This folder contains " + str(fileNo) + " files, from " + fileList[0].split("/")[-1] + " to " + fileList[-1].split("/")[-1] + "\n")
-            goOn = 1
-            main_menu(myDir)         
+                print("Counting files...")
+                print("This folder contains " + str(fileNo) + " files, from " + fileList[0].split("/")[-1] + " to " + fileList[-1].split("/")[-1])
+            goOn = 1         
+        elif myDir == "x" or myDir == "exit":
+            exit()
         else:
-            myDir = input("That folder does not exist... Try again!\n>>> ")
-            continue 
-    
+            myDir = input("That folder does not exist... Try again!\nSTR>>> ")
+    goOn = 0
+    userFav = input("Save this folder as user favorite?\nY/N>>> ").lower()
+    while goOn == 0:
+        if userFav == "y" or userFav == "yes" or userFav == "yep":
+            print("Saving preference...")
+            with open("userFav.txt", "a") as f:
+                f.write(myDir)
+            main_menu(myDir)
+        else:        
+            main_menu(myDir)
+            
 def main_menu(myDir):
-    fileList, noFiles = list_textfiles(myDir)
+    userCond = 0
     userInput = input("""Please select:
-    --- PREPROCESSING -----------------------
-    [1] for chunking
-    [2] for stemming
-    [3] for POS tagging / filtering
-    [4] for POS filtering 
-    [5] for lemmatization
-    --- TEXT ANALYSIS -----------------------
-    [6] for word count
-    [7] for top words 
-    [8] for word finder
-    [9] for concordances
+    ---- PREPROCESSING ----------------------
+    [1]  for chunking
+    [2]  for stemming
+    [3]  for POS tagging / filtering
+    [4]  for POS filtering 
+    [5]  for lemmatization
+    ---- TEXT ANALYSIS ----------------------
+    [6]  for word count
+    [7]  for top words 
+    [8]  for word finder
+    [9]  for concordances
     [10] for top clusters (bi- or trigrams)
     [11] for distinctive words
-    --- GRAPH OUTPUT -----------------------
+    ---- GRAPH OUTPUT ----------------------
     [12] for lexical variety (means and TTR)
     [13] for Euclidian distances
     [14] for TF-IDF cosine distances
-    ----------------------------------------
-    [x] to exit \n>>> """)
-    if userInput == "1":
-        chunking(myDir)
-    elif userInput == "2":
-        stemmer(myDir)
-    elif userInput == "3":
-        tagger(myDir)
-    elif userInput == "4":
-        pos_filter(myDir)
-    elif userInput == "5":
-        lemmatizer(myDir)
-    elif userInput == "6":
-        word_count(myDir)
-    elif userInput == "7":    
-        top_words(myDir)
-    elif userInput == "8":    
-        word_find(myDir)
-    elif userInput == "9":
-        concordance(myDir)
-    elif userInput == "10":
-        cluster(myDir)
-    elif userInput == "11":
-        distinctive(myDir)
-    elif userInput == "12":
-        lexical_variety(myDir)
-    elif userInput == "13":
-        euclidian(myDir)
-    elif userInput == "14":
-        cosine(myDir)
-    elif userInput == "x" or "X":
-        exit()
-    else:
-        print("Please try again or x to exit")
-        main()
+    ---- OPTIONS ---------------------------
+    [u]  to change/remove user favorite 
+    [x]  to exit \nINT>>> """).lower()
+    while userCond == 0:
+        if userInput == "1":
+            userCond = 1
+            chunking(myDir)
+        elif userInput == "2":
+            userCond = 1
+            stemmer(myDir)
+        elif userInput == "3":
+            userCond = 1
+            tagger(myDir)
+        elif userInput == "4":
+            userCond = 1
+            pos_filter(myDir)
+        elif userInput == "5":
+            userCond = 1
+            lemmatizer(myDir)
+        elif userInput == "6":
+            userCond = 1
+            word_count(myDir)
+        elif userInput == "7":    
+            userCond = 1
+            top_words(myDir)
+        elif userInput == "8":    
+            userCond = 1
+            word_find(myDir)
+        elif userInput == "9":
+            userCond = 1
+            find_concordances(myDir)
+        elif userInput == "10":
+            userCond = 1
+            find_clusters(myDir)
+        elif userInput == "11":
+            userCond = 1
+            distinctive(myDir)
+        elif userInput == "12":
+            userCond = 1
+            lexical_variety(myDir)
+        elif userInput == "13":
+            userCond = 1
+            euclidian(myDir)
+        elif userInput == "14":
+            userCond = 1
+            cosine(myDir)
+        elif userInput == "x":
+            exit()
+        elif userInput == "u":
+            if os.path.exists("userFav.txt"):
+                os.remove("userFav.txt")
+                print("Favorite folder removed.")
+                folder()
+        else:
+            userInput = input("Please try again or x to exit.\nINT>>> ")
 
 # --- SUPPORTING FUNCTIONS ---
 
@@ -216,9 +268,12 @@ def chunking(myDir):
                           "{}{:04d}".format(basename, chunk['number']) + '.txt')
         with open(fn, 'w') as f:
             f.write(str(chunk['text']))
-    print("Done! Exiting...")
-    exit()
-            
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
+                                
 def stemmer(myDir):
     """Stems words. Creates directory in current directory with stemmed texts, or a single .csv file with top 100 stemmed words."""
     fileList, noFiles = list_textfiles(myDir)
@@ -272,8 +327,11 @@ def stemmer(myDir):
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
             for j in top:
                 writer.writerow(j)
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
 
 def tagger(myDir):
     """POS tags words. Creates directory in current directory with POS tagged texts, or a .csv file
@@ -307,21 +365,25 @@ def tagger(myDir):
             posTXTDir = myDir + "-POS"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
+            print("Filtering POS tokens...")
             condFilter = 1
         elif userFilter == "2": 
             posTXTDir = myDir + "-POS-nouns"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
+            print("Filtering nouns...")
             condFilter = 2
         elif userFilter == "3": 
             posTXTDir = myDir + "-POS-pronouns"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
+            print("Filtering pronouns...")
             condFilter = 3
         elif userFilter == "4": 
             posTXTDir = myDir + "-POS-verbs"               
             if not os.path.exists(posTXTDir):
                 os.makedirs(posTXTDir)  
+            print("Filtering verbs...")
             condFilter = 3
         else:
             userFilter = input("Please try again!\nINT>>> ")
@@ -368,8 +430,11 @@ def tagger(myDir):
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
             for i in totalTop:
                 writer.writerow(i)
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
 
 def pos_filter (myDir):
     """Filters POS-tagged folder of files by nouns, verbs or pronouns"""
@@ -421,8 +486,11 @@ def pos_filter (myDir):
             realList = allWords1 + allWords2
             with open(os.curdir + "/" + myDir + "-verbs" + "/" + fSmall, "w") as f:
                     f.write(' '.join(realList)) 
-    print("Done! Exiting...")
-    exit()    
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()    
 
 def lemmatizer(myDir):
     """Lemmatizes words. Creates directory in current directory with lemmatized texts, or a .csv file with top 100 lemmas."""
@@ -478,8 +546,11 @@ def lemmatizer(myDir):
             writer = csv.writer(f, delimiter= ",", quoting=csv.QUOTE_NONNUMERIC)
             for i in totalTop:
                 writer.writerow(i)
-    print("Done! Exiting...")
-    exit()    
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit() 
     
 def word_count(myDir):
     """Simple word count function. Prints separate and total wordcount to terminal"""
@@ -514,9 +585,12 @@ def word_count(myDir):
         print('%-*s %i' % (20, k, v))     
     print("\nTotal word count")
     print(str(totalWordCount) + "\n")
-    print("Done! Exiting...")
-    exit()
-
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
+        
 def top_words(myDir):
     """finds top N words, based on user input"""
     inp = input("How many top words should I find? \nINT>>> ")
@@ -524,7 +598,7 @@ def top_words(myDir):
        val = int(inp)
     except ValueError:
        print("Please enter a number!")
-       top_words()
+       top_words(myDir)
     condCSV = 0
     while condCSV == 0:
         userAns = input("Do you want a .csv file with the top words?\nY/N>>> ").lower()
@@ -596,7 +670,7 @@ def top_words(myDir):
             else:
                 inp2 = input("please enter 'yes' or 'no'!\nY/N>>> ").lower()
                 continue    
-    fdist = nltk.FreqDist(allWords)
+    fdist = nltk.FreqDist(allWords)        
     # Show the top N words in the list, with counts
     print("TOP N WORDS IN CORPUS")
     print('%-*s %s' % (20, "Word", "Frequency"))
@@ -606,12 +680,18 @@ def top_words(myDir):
         if condCSV == 2:
             with open(outFile, "a", newline='') as f:
                 writer.writerow( (word, frequency) )
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
             
+# Function to check a word and see what position it has in the top words list!
+
+
 def word_find(myDir):
     """finds word of choice; generates a .csv file with (relative) frequencies,
-    as well as two plots"""
+    as well as two plots with relative word frequencies"""
     myWord = input("What word should I look for?\nSTR>>> ").lower()    
     cond = 0
     userFile = input("Do you want a .csv file with (relative) frequencies of the word?\nY/N>>> ").lower()
@@ -632,8 +712,13 @@ def word_find(myDir):
     totalWords = 0
     relFreqList = []
     relFreqTotalList = []
-    fList = []
     fileList, noFiles = list_textfiles(myDir)
+    listIndex = 0
+    myDict = {}
+    myList = []     
+    # Starts the first loop to get total word count and total user word count, which we'll use in the next loop.
+    # This loop also serves to put all the authors/subcorpora in their separate lists inside myDict
+    print("Finding word frequencies...")
     for filePath in fileList:
         myWordCounter = 0
         words = get_tokens(filePath)  
@@ -641,55 +726,70 @@ def word_find(myDir):
         totalWords += wordCount
         for w in words:
             if myWord in w:
-                    myWordCounter += 1
+                myWordCounter += 1
         totalMyWord += myWordCounter
-    for filePath in fileList:
+        fName = filePath.split("/")[-1].split("-")[0]
+        if fName.endswith('.txt'):
+            fName = fName.replace('.txt','')
+        if fName not in myList:
+            author = fileList[listIndex].split("/")[-1].split("-")[0]
+            myDict[fName] = listFromAuthor(author, fileList)        
+            myList.append(fName)
+        listIndex += 1
+    # Sort the dict (otherwise it's unordered and doesn't line up with the lists we've been creating) 
+    oDict = OrderedDict(sorted(myDict.items(), key=lambda t: t[1]))
+    # Start second loop to get relative frequencies per author
+    relFreqDict = {}
+    for key, values in oDict.items():
         myWordCounter = 0
-        fSmall = os.path.split(filePath)[1] 
-        fName = os.path.splitext(fSmall)[0]
-        fList.append(fName)
-        words = get_tokens(filePath)
-        wordCount = len(words)
-        for w in words:
-            if myWord in w:
+        authorWordCount = 0
+        for value in values:
+            fSmall = os.path.split(value)[1] 
+            fName = os.path.splitext(fSmall)[0]
+            words = get_tokens(value)
+            wordCount = len(words)
+            authorWordCount += wordCount
+            for w in words:
+                if myWord in w:
                     myWordCounter += 1
-        relFreq = ((myWordCounter / wordCount) * 100)
+        relFreq = ((myWordCounter / authorWordCount) * 100)  
+        relFreqDict[key] = relFreq
         relFreqList.append(relFreq)
         relFreqTotal = ((myWordCounter / totalMyWord) * 100)
-        relFreqTotalList.append(relFreqTotal)
+        relFreqTotalList.append(relFreqTotal)            
+        # Create output file if user wants it
         if cond == 2:
             with open(outFile, "a", newline='') as f:
-                writer.writerow( (fName, wordCount, myWordCounter, relFreq, relFreqTotal) )
-    
-    print("Generating output figure 1...\n")
+                writer.writerow( (value, wordCount, myWordCounter, relFreq) )
+     
     # Output figure 1: the search word normalized to the total no. of words in the subcorpus
+    print("Generating output figure 1...")
     fig, ax = plt.subplots()
     N = len(relFreqList)
     x = np.arange(1, N+1)
     y = [num for num in relFreqList]
-    labels = [s for s in fList]
+    labels = [s for s in myList]
     width = 1
     bar1 = plt.bar(x, y, width, color="lightcoral")
     plt.ylabel("relative frequency")
     plt.xticks(x - 1 + width, labels, rotation='30')
     # Set 'minor ticks' so that they are located halfway between the major ticks.
     # First, hide major tick labels
-    #ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
     # Then, customize minor tick labels
-    #ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
-    #ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(linspace(1.5, 100.5, num=100)))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(labels))
     # Auto-limiting graph to the size of the plot
-    plt.xlim(1, len(fList) + 1) 
-    plt.title("Word: %s" % myWord + ", normalized to total no. words in subcorpus", fontsize=15)    
+    plt.xlim(1, len(myList) + 1) 
+    plt.title("Word: %s" % myWord + ", normalized to total no. of words in subcorpus", fontsize=15)    
     plt.show()
     
-    print("Generating output figure 2...\n")
     # Output figure 2: the search word normalized to the total no. of that word in the whole corpus    
-    labels = [s for s in fList]
-
+    print("Generating output figure 2...")
+    labels = [s for s in myList]
     sizes = [num for num in relFreqTotalList]
     colors = ["lightcoral", "yellowgreen", "gold", "lightskyblue"]
-    # if we want, we could explode the largest number
+    ## if we want, we could visually 'explode' the largest number
     #explodeList = []
     #for i in relFreqTotalList:
     #    if i != max(relFreqTotalList):
@@ -697,7 +797,7 @@ def word_find(myDir):
     #    elif i == max(relFreqTotalList):
     #        explodeList.append(0.1)
     #explode = tuple(explodeList)
-    # add explode=explode in next param
+    ## If we're adding the explode function, we should add explode=explode in the next param
     plt.pie(sizes, labels=labels, colors=colors,
             autopct='%1.1f%%', shadow=False, startangle=90)
     # Draw a circle at the center of pie to make it look like a donut
@@ -708,15 +808,40 @@ def word_find(myDir):
     plt.axis('equal')
     plt.title("Word: '%s'" % myWord + ", normalized to frequency of '%s'" % myWord + " in total corpus", fontsize=15, y=1.08)    
     plt.show()    
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
 
-def concordance(myDir):
-    """Prints concordances of a chosen word, iterating randomly through the
-    corpus"""
+def discourse_freq(myDir):
+    """User enters several words, function calculates the mean of their relative frequencies"""
+
+
+
+# Next step: if I want to do this for a number of words, I'd want to enter those words,
+# calculate their relative frequencies, calculate the means of those frquencies and offset
+# it against the total word count
+
+
+def find_concordances(myDir):
+    """Prints concordances of a chosen word, iterating alphabetically or randomly through the corpus"""
     import random 
     fileList, noFiles = list_textfiles(myDir)
+    userGram = 0
     userWord = input("Which word do you want to see the concordance of?\nSTR>>> ").lower()
+    while userGram == 0:
+        split = userWord.split(' ')        
+        if len(split) < 2:
+            userGram = 1
+        if len(split) == 2:
+            print("Looking for bigrams...")
+            userGram = 2
+        if len(split) == 3:
+            print("Looking for trigrams...")
+            userGram = 3
+        if len(split) > 3:
+            userWord = input("Please choose word, bigram or trigram!\nSTR>>> ").lower()
     sortCond = 0
     userSort = input("Should I iterate through the subcorpora [1] alphabetically or [2] randomly?\nINT>>> ")
     while sortCond == 0:
@@ -725,27 +850,82 @@ def concordance(myDir):
             if userSort == "2":
                 random.shuffle(fileList)
             sortCond = 1 
-            print("hello?")
         else:
             userSort = input("Please try again.\nINT>>> ")
-    totalTokens = []
-    for filePath in fileList:
-        tokens = get_tokens(filePath)
-        x = None
-        if userWord in tokens:  
-            text = nltk.Text(tokens)
-            print(str(filePath))
-            print(text.concordance(userWord))
-            x = input("Press ENTER to continue or X to exit").lower()
-            if x == "x":
-                exit()
-            elif x != None:
-                continue
-    
-def cluster(myDir):
+    if userGram == 1:
+        for filePath in fileList:
+            tokens = get_tokens(filePath)    
+            x = None
+            if userWord in tokens:  
+                text = nltk.Text(tokens)
+                print(str(filePath))
+                print(text.concordance(userWord))
+                x = input("Press ENTER to continue, M for main menu, or X to exit... \n").lower()
+                if x == "x":
+                    exit()
+                elif x == "m":
+                    main_menu(myDir)
+                elif x != None:
+                    continue
+    elif userGram == 2:
+        fakeUserWord = userWord.replace(" ", "_")
+        for filePath in fileList:
+            with open(filePath, 'r') as f:
+                text = f.read()
+            lowers = text.lower()
+            no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
+            no_diacritics = ''.join(c for c in unicodedata.normalize('NFD', no_punctuation) if unicodedata.category(c) != 'Mn')
+            string = no_diacritics.replace(userWord, userWord.replace(" ", "_"))
+            if fakeUserWord in string:
+                tokens = string.split()
+                text = nltk.Text(tokens)
+                print(str(filePath))
+                print(text.concordance(fakeUserWord))
+                x = input("Press ENTER to continue, M for main menu, or X to exit... \n").lower()
+                if x == "x":
+                    exit()
+                elif x == "m":
+                    main_menu(myDir)
+                elif x != None:
+                    continue
+    elif userGram == 3:
+        fakeUserWord = userWord.replace(" ", "_")
+        for filePath in fileList:
+            with open(filePath, 'r') as f:
+                text = f.read()
+            lowers = text.lower()
+            if userWord in lowers:
+                no_punctuation = ''.join(ch for ch in lowers if category(ch)[0] != 'P')
+                no_diacritics = ''.join(c for c in unicodedata.normalize('NFD', no_punctuation) if unicodedata.category(c) != 'Mn')
+                string = no_diacritics.replace(userWord, userWord.replace(" ", "_"))
+                tokens = string.split()
+                text = nltk.Text(tokens)
+                print(str(filePath))
+                print(text.concordance(fakeUserWord))
+                x = input("Press ENTER to continue, M for main menu, or X to exit... \n").lower()
+                if x == "x":
+                    exit()
+                elif x == "m":
+                    main_menu(myDir)
+                elif x != None:
+                    continue   
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
+
+def find_clusters(myDir):
     """Finds cluster based on word of choice. User selects bi- or trigram."""
     fileList, noFiles = list_textfiles(myDir)
     userWord = input("What word do you want to see the lexical cluster of?\nSTR>>> ").lower()    
+    userCond = 0
+    while userCond == 0:
+        split = userWord.split(' ')        
+        if len(split) > 1:
+            userWord = input("Please choose 1 word!\nSTR>>> ").lower()
+        else:
+            userCond = 1
     gramCond = 0
     userGram = input("Do you want [1] bigrams or [2] trigrams?\nINT>>> ")
     valid = ["1", "2"]
@@ -755,7 +935,7 @@ def cluster(myDir):
         else:
             userGram = input("Please try again.\nINT>>> ")
     noCond = 0
-    userNo = input("How many top clusters (between 1 and 100) should I find?\nINT>>> ")
+    userNo = input("How many top clusters (1-100) should I find?\nINT>>> ")
     while noCond == 0:
         valid = [str(n) for n in range(1,100)]
         if userNo in valid:
@@ -784,6 +964,11 @@ def cluster(myDir):
         print('%-*s %-*s %-*s %s' % (10, "Word 1", 10, "Word 2", 10, "Word 3", "Freq"))
         for words, freq in triCommon:            
             print('%-*s %-*s %-*s %s' % (10, str(words[0]), 10, str(words[1]), 10, str(words[2]), freq))          
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
         
 def lexical_variety(myDir):
     """Calculates and visualizes mean word use and TTF scores. If input is a hyphened series of chunks,
@@ -906,15 +1091,18 @@ def lexical_variety(myDir):
     plt.xlim(1, len(sortedTTR) +1)
     plt.title("Lexical variety by TTR score per subcorpus, ordered by value", fontsize=14, y=1.03)    
     plt.show()
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
 
 def distinctive(myDir):
     """Compare the average rate at which words are used in (A) the user-defined subcorpus and (B) the
     rest of the corpus. We calculate the difference between the rates to calculate their
     distinciveness in the subcorpus that the user enters"""
     fileList, noFiles = list_textfiles(myDir)
-    userName = input("Please enter name of subcorpus you want to see distinctive features of\n (e.g. 'Austen')\nSTR>>> ").lower()  
+    userName = input("Please enter name of subcorpus you want to see distinctive features of\nSTR>>> ").lower()  
     testDir = []
     for i in fileList:
         fSmall = os.path.split(i)[1] 
@@ -994,8 +1182,11 @@ def distinctive(myDir):
             with open(outFile, "a", newline='') as f:
                 for k, v in d.items():
                     writer.writerow( (k,v) )  
-    print("Done! Exiting...")
-    exit()    
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()   
     
 def euclidian(myDir):
     """Calculates Euclidian distances between subcorpora.
@@ -1064,8 +1255,11 @@ def euclidian(myDir):
     plt.tight_layout()  # fixes margins
     plt.title("Dendogram using Euclidian distances between subcorpora")
     plt.show()
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
     
 def cosine(myDir):
     """Calculates Cosine distances between subcorpora.
@@ -1077,6 +1271,7 @@ def cosine(myDir):
     from scipy.cluster.hierarchy import ward, dendrogram
     from sklearn.feature_extraction.text import TfidfVectorizer
     fileList, noFiles = list_textfiles(myDir)
+    author = fileList[0].split("/")[-1]
     if "-" in author:        # We could ask the user for a different escape char at te start too
         print("Found split subcorpora in folder. Will concatenate for evaluation.") 
     else:
@@ -1137,8 +1332,11 @@ def cosine(myDir):
     plt.tight_layout()  # fixes margins
     plt.title("Dendogram using cosine distances between subcorpora")
     plt.show()
-    print("Done! Exiting...")
-    exit()
+    goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+    if goOn == "yes" or goOn == "y" or goOn == "yep":
+        main_menu(myDir)
+    else:
+        exit()
 
 if __name__ == '__main__':
     main()
