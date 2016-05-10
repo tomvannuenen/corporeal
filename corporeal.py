@@ -7,6 +7,9 @@ import re
 import numpy as np
 from numpy import linspace
 import string
+import sys
+import stat
+import hashlib 
 from collections import Counter
 from collections import OrderedDict
 import nltk
@@ -21,7 +24,12 @@ from unicodedata import category
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from gensim import corpora, models, similarities
+import signal
+
+# Use prettier matplotlib graphics
 plt.style.use('ggplot')
+# Removing traceback when user presses CTRL-C 
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 def main():
     print("-------------------------------")
@@ -81,6 +89,7 @@ def main_menu(myDir):
     userCond = 0
     userInput = input("""Please select:
     ---- PREPROCESSING ----------------------
+    [0]  for removing duplicate files
     [1]  for chunking
     [2]  for stemming
     [3]  for POS tagging / filtering
@@ -99,8 +108,11 @@ def main_menu(myDir):
     [14] for TF-IDF cosine distances
     ---- OPTIONS ---------------------------
     [u]  to change/remove user favorite 
-    [x]  to exit \nINT>>> """).lower()
+    [x]  to exit (or CTRL-C at any time)\nINT>>> """).lower()
     while userCond == 0:
+        if userInput == "0":
+            userCond = 1
+            duplicates(myDir)
         if userInput == "1":
             userCond = 1
             chunking(myDir)
@@ -240,7 +252,112 @@ def listFromAuthor(author, fileList):
             myDict[author].append(filePath)
     return myDict[author]
             
+
 # --- MAIN FUNCTIONS ---
+
+def duplicates(myDir):
+    """Remove double files from user-defined filelist"""
+    filesBySize = {}    
+    textFiles, number = list_textfiles(myDir)
+
+    for f in textFiles:
+        if not os.path.isfile(f):
+            continue
+        size = os.stat(f).st_size
+        if size < 100:
+            continue
+        if size in filesBySize:
+            a = filesBySize[size]
+        else:
+            a = []
+            filesBySize[size] = a
+        a.append(f)
+    print('Scanning directory "%s"....' % myDir)
+#    print('Finding potential dupes...')
+    potentialDupes = []
+    potentialCount = 0
+    trueType = type(True)
+    sizes = list(filesBySize.keys())
+    sizes.sort()
+    for k in sizes:
+        inFiles = filesBySize[k]
+        outFiles = []
+        hashes = {}
+        if len(inFiles) is 1: continue
+        #print('Testing %d files of size %d...' % (len(inFiles), k))
+        for fileName in inFiles:
+            if not os.path.isfile(fileName):
+                continue
+            with open(fileName, 'r') as aFile:
+                # Flush md5 hash algorithm
+                m = hashlib.md5()
+                # Have to explicitly encode as all strings are unicode objects in Python 3 
+                m.update(aFile.read(1024).encode('utf-8'))            
+                hashValue = m.digest()
+            if hashValue in hashes:
+                x = hashes[hashValue]
+                if type(x) is not trueType:
+                    outFiles.append(hashes[hashValue])
+                    hashes[hashValue] = True
+                outFiles.append(fileName)
+            else:
+                hashes[hashValue] = fileName
+            aFile.close()
+        if len(outFiles):
+            potentialDupes.append(outFiles)
+            potentialCount = potentialCount + len(outFiles)
+    del filesBySize
+    
+    print('Scanning for duplicates...')
+    
+    dupes = []
+    for aSet in potentialDupes:
+        outFiles = []
+        hashes = {}
+        for fileName in aSet:
+            #print('Scanning file "%s"...' % fileName)
+            with open(fileName, 'r') as aFile:
+                m = hashlib.md5()
+                while True:
+                    r = aFile.read(4096).encode('utf-8')
+                    if not len(r):
+                        break
+                    m.update(r)
+            hashValue = m.digest()
+            if hashValue in hashes:
+                if not len(outFiles):
+                    outFiles.append(hashes[hashValue])
+                outFiles.append(fileName)
+            else:
+                hashes[hashValue] = fileName
+        if len(outFiles):
+            dupes.append(outFiles)
+    i = 0
+    goOn = 0
+    choice = input("Found %i duplicates. (1) Show them, (2) Delete them, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+    while goOn == 0:
+        if choice == "1":
+            for d in dupes:
+                print('Original is %s' % d[0])
+                for f in d[1:]:
+                    print('Duplicate is %s' % f)
+        choice = input("Found %i duplicates. (1) Show them, (2) Delete them, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+        if choice == "2":    
+            for d in dupes:
+                print('Original is %s' % d[0])
+                for f in d[1:]:
+                    i = i + 1
+                    print('Deleting %s' % f)
+                    os.remove(f)
+                goOn = 1
+                main_menu(myDir)
+        elif choice == "3":
+            goOn = 1
+            main_menu(myDir)
+        elif choice == "x" or "X":
+            exit()
+        else:
+            choice = input("Please enter 1, 2, 3 or x.")
 
 def chunking(myDir):
     """Split large .txt file into chunks. Output is a folder of small .txt files.
@@ -248,9 +365,9 @@ def chunking(myDir):
     fileList, noFiles = list_textfiles(myDir)
     chunks = []
     try:
-        chunkLength = int(input("how many words should each chunks be? Enter a number\n(suggested: 500-1000).\nINT>>> "))
+        chunkLength = int(input("How many words should each chunks be? Enter a number\n(suggested: 500-1000).\nINT>>> "))
     except ValueError:
-        print("Please enter a number")
+        print("Please enter a number.")
         chunking(myDir)
     for filePath in fileList:
         chunk_counter = 0

@@ -33,6 +33,9 @@ Note that Corporeal expects to be used for parsing English texts (in terms of  s
 
 <h3> Features </h3>
 
+<h4>Removing duplicate files</h4>
+Often times scraping scripts will yield double entries. This algorithm checks the input folder for any duplicate content; the user may then check these files or remove them.
+
 <h4>Chunking</h4>
 Segments input text files in smaller size text files, and places them into new folder. User can determine the size of the chunks (i.e., the number of words). As in all modules, the program normalizes the input texts by case-folding the word tokens and removing punctuation, in order to achieve base equivalence classing. Output files are named in such a way that Corporeal can analyze them through other functions.
 
