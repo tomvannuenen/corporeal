@@ -89,26 +89,26 @@ def main_menu(myDir):
     userCond = 0
     userInput = input("""Please select:
     ---- PREPROCESSING ----------------------
-    [0]  for removing duplicate files
-    [1]  for chunking
-    [2]  for stemming
-    [3]  for POS tagging / filtering
-    [4]  for POS filtering 
-    [5]  for lemmatization
+    [0]  Removing duplicate files
+    [1]  Chunking
+    [2]  Stemming
+    [3]  POS tagging / filtering
+    [4]  POS filtering 
+    [5]  Lemmatization
     ---- TEXT ANALYSIS ----------------------
-    [6]  for word count
-    [7]  for top words 
-    [8]  for word finder
-    [9]  for concordances
-    [10] for top clusters (bi- or trigrams)
-    [11] for distinctive words
+    [6]  Word count
+    [7]  Top words 
+    [8]  Word finder
+    [9]  Concordances
+    [10] Top clusters (bi- or trigrams)
+    [11] Distinctive words
     ---- GRAPH OUTPUT ----------------------
-    [12] for lexical variety (means and TTR)
-    [13] for Euclidian distances
-    [14] for TF-IDF cosine distances
+    [12] Lexical variety (means and TTR)
+    [13] Euclidian distances
+    [14] TF-IDF cosine distances
     ---- OPTIONS ---------------------------
-    [u]  to change/remove user favorite 
-    [x]  to exit (or CTRL-C at any time)\nINT>>> """).lower()
+    [u]  Change/remove user favorite 
+    [x]  Exit (or CTRL-C at any time)\nINT>>> """).lower()
     while userCond == 0:
         if userInput == "0":
             userCond = 1
@@ -334,23 +334,26 @@ def duplicates(myDir):
             dupes.append(outFiles)
     i = 0
     goOn = 0
-    choice = input("Found %i duplicates. (1) Show them, (2) Delete them, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+    choice = input("Found %i duplicates. (1) Show them, (2) Delete them,\n(3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
     while goOn == 0:
         if choice == "1":
             for d in dupes:
                 print('Original is %s' % d[0])
                 for f in d[1:]:
                     print('Duplicate is %s' % f)
-        choice = input("Found %i duplicates. (1) Show them, (2) Delete them, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
-        if choice == "2":    
+                choice = input("Found %i duplicates. (1) Show them, (2) Delete them,\n(3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+        elif choice == "2":    
             for d in dupes:
                 print('Original is %s' % d[0])
                 for f in d[1:]:
                     i = i + 1
                     print('Deleting %s' % f)
                     os.remove(f)
-                goOn = 1
+            goOn = input("Done! Back to main menu?\nY/N>>> ").lower()
+            if goOn == "yes" or goOn == "y" or goOn == "yep":
                 main_menu(myDir)
+            else:
+                exit()
         elif choice == "3":
             goOn = 1
             main_menu(myDir)
