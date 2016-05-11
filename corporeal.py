@@ -43,16 +43,6 @@ def folder():
         number = 0
         with open("userFav.txt", "r") as f:
             myDir = f.readline()
-        #    for line in f:
-        #        number += 1
-        #        myDict[number] = line
-        #print("User favorites found:")
-        #for key, value in myDict.items():
-        #    print('%-*s %s' % (5, key, value))
-        #myChoice = input("Choose which one to use.\nINT>>> ")
-        ## connect myChoice number to corresponding value in myDict, that value is myDir variable
-        #myDir = myDict        
-        #myChoice
         print("Using favorited folder: " + myDir)
         main_menu(myDir)
     goOn = 0
@@ -66,24 +56,16 @@ def folder():
             if fileNo == 1:
                 print("Counting files...")
                 print("This folder contains " + str(fileNo) + " file: " + fileList[0].split("/")[-1])
+                main_menu(myDir)
             if fileNo > 1:
                 print("Counting files...")
                 print("This folder contains " + str(fileNo) + " files, from " + fileList[0].split("/")[-1] + " to " + fileList[-1].split("/")[-1])
+                main_menu(myDir)
             goOn = 1         
         elif myDir == "x" or myDir == "exit":
             exit()
         else:
             myDir = input("That folder does not exist... Try again!\nSTR>>> ")
-    goOn = 0
-    userFav = input("Save this folder as user favorite?\nY/N>>> ").lower()
-    while goOn == 0:
-        if userFav == "y" or userFav == "yes" or userFav == "yep":
-            print("Saving preference...")
-            with open("userFav.txt", "a") as f:
-                f.write(myDir)
-            main_menu(myDir)
-        else:        
-            main_menu(myDir)
             
 def main_menu(myDir):
     userCond = 0
@@ -107,7 +89,7 @@ def main_menu(myDir):
     [13] Euclidian distances
     [14] TF-IDF cosine distances
     ---- OPTIONS ---------------------------
-    [u]  Change/remove user favorite 
+    [u]  Add/remove user favorite 
     [x]  Exit (or CTRL-C at any time)\nINT>>> """).lower()
     while userCond == 0:
         if userInput == "0":
@@ -157,11 +139,16 @@ def main_menu(myDir):
             cosine(myDir)
         elif userInput == "x":
             exit()
-        elif userInput == "u":
+        elif userInput == "u":            
+            if not os.path.exists("userFav.txt"):
+                print("Saving preference...")
+                with open("userFav.txt", "a") as f:
+                    f.write(myDir)
+                main_menu(myDir)
             if os.path.exists("userFav.txt"):
                 os.remove("userFav.txt")
                 print("Favorite folder removed.")
-                folder()
+                main_menu(myDir)
         else:
             userInput = input("Please try again or x to exit.\nINT>>> ")
 

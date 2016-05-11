@@ -13,7 +13,7 @@ Corporeal runs on Python 3 and uses a few well-known packages. Users may conside
  
 Navigate to the folder Corporeal is located in, and enter `python corporeal.py`. For those who don't like command-line manoeuvring: just click the executable (.sh). 
 
-Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User should enter a directory name starting from current.
+Corporeal expects to be placed in a folder that also contains a data folder. It will ask for that folder on startup. User should enter a directory name starting from current. In main menu, user can add or remove the chosen folder as 'favorite folder'. When adding folder as favorite folder, Corporeal will start with that folder as preset.
 
 Corporeal uses simple command-line commands. Answering its questions, it expects either a number (indicated by `INT` in the response line), a string (indicated by `STR`) or a simple yes/no (indicated by `Y/N`). Characters are case insensitive.
 
