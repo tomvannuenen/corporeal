@@ -33,11 +33,12 @@ signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 def main():
     print("-------------------------------")
-    print("CORPOREAL 0.5, by Tom van Nuenen")
+    print("CORPOREAL 0.6, by Tom van Nuenen")
     print("-------------------------------")   
     folder()
 
 def folder():
+    """Select input folder or jump to preset folder if user has selected one in main menu."""
     if os.path.exists("userFav.txt"):
         myDict = {}
         number = 0
@@ -68,6 +69,7 @@ def folder():
             myDir = input("That folder does not exist... Try again!\nSTR>>> ")
             
 def main_menu(myDir):
+    """Just the main menu."""
     userCond = 0
     userInput = input("""Please select:
     ---- PREPROCESSING ----------------------
@@ -80,11 +82,11 @@ def main_menu(myDir):
     ---- TEXT ANALYSIS ----------------------
     [6]  Word count
     [7]  Top words 
-    [8]  Word finder
-    [9]  Concordances
-    [10] Top clusters (bi- or trigrams)
-    [11] Distinctive words
+    [8]  Concordances
+    [9]  Top clusters (bi- or trigrams)
+    [10] Distinctive words
     ---- GRAPH OUTPUT ----------------------
+    [11] Custom word frequency
     [12] Lexical variety (means and TTR)
     [13] Euclidian distances
     [14] TF-IDF cosine distances
@@ -116,18 +118,18 @@ def main_menu(myDir):
         elif userInput == "7":    
             userCond = 1
             top_words(myDir)
-        elif userInput == "8":    
-            userCond = 1
-            word_find(myDir)
-        elif userInput == "9":
+        elif userInput == "8":
             userCond = 1
             find_concordances(myDir)
-        elif userInput == "10":
+        elif userInput == "9":
             userCond = 1
             find_clusters(myDir)
-        elif userInput == "11":
+        elif userInput == "10":
             userCond = 1
             distinctive(myDir)
+        elif userInput == "11":    
+            userCond = 1
+            word_find(myDir)
         elif userInput == "12":
             userCond = 1
             lexical_variety(myDir)
@@ -321,14 +323,14 @@ def duplicates(myDir):
             dupes.append(outFiles)
     i = 0
     goOn = 0
-    choice = input("Found %i duplicates. (1) Show them, (2) Delete them,\n(3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+    choice = input("Found %i duplicates. (1) Show, (2) Delete, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
     while goOn == 0:
         if choice == "1":
             for d in dupes:
                 print('Original is %s' % d[0])
                 for f in d[1:]:
                     print('Duplicate is %s' % f)
-                choice = input("Found %i duplicates. (1) Show them, (2) Delete them,\n(3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
+                choice = input("Found %i duplicates. (1) Show, (2) Delete, (3) Back to menu or (x) Exit\nINT>>> " % len(dupes))
         elif choice == "2":    
             for d in dupes:
                 print('Original is %s' % d[0])
@@ -792,13 +794,10 @@ def top_words(myDir):
         main_menu(myDir)
     else:
         exit()
-            
-# Function to check a word and see what position it has in the top words list!
-
 
 def word_find(myDir):
     """finds word of choice; generates a .csv file with (relative) frequencies,
-    as well as two plots with relative word frequencies"""
+    as well as two plots with relative word frequencies and word frequency details"""
     myWord = input("What word should I look for?\nSTR>>> ").lower()    
     cond = 0
     userFile = input("Do you want a .csv file with (relative) frequencies of the word?\nY/N>>> ").lower()
@@ -823,12 +822,14 @@ def word_find(myDir):
     listIndex = 0
     myDict = {}
     myList = []     
+    allWords = []
     # Starts the first loop to get total word count and total user word count, which we'll use in the next loop.
     # This loop also serves to put all the authors/subcorpora in their separate lists inside myDict
-    print("Finding word frequencies...")
+    print("Tracing word frequencies...")
     for filePath in fileList:
         myWordCounter = 0
         words = get_tokens(filePath)  
+        allWords.extend(words)
         wordCount = len(words)
         totalWords += wordCount
         for w in words:
@@ -868,7 +869,21 @@ def word_find(myDir):
         if cond == 2:
             with open(outFile, "a", newline='') as f:
                 writer.writerow( (value, wordCount, myWordCounter, relFreq) )
-     
+    # Print total ocurrances of myWord
+    print('The word ' + '"' + myWord + '"' + ' appears ' + str(totalMyWord) + ' times in total.')
+    ## Print place of word in freq dist
+    fdist = nltk.FreqDist(allWords)        
+    for i,j in enumerate(fdist.most_common(10000)):
+        for word in j:
+            if word == myWord:
+                if i == 0:
+                    print("It is the " + str(i+1) + "st most frequent word in the corpus.") 
+                if i == 1:
+                    print("It is the " + str(i+1) + "nd most frequent word in the corpus.") 
+                if i >= 2:
+                    print("It is the " + str(i+1) + "rd most frequent word in the corpus.") 
+
+         
     # Output figure 1: the search word normalized to the total no. of words in the subcorpus
     print("Generating output figure 1...")
     fig, ax = plt.subplots()
@@ -920,16 +935,6 @@ def word_find(myDir):
         main_menu(myDir)
     else:
         exit()
-
-def discourse_freq(myDir):
-    """User enters several words, function calculates the mean of their relative frequencies"""
-
-
-
-# Next step: if I want to do this for a number of words, I'd want to enter those words,
-# calculate their relative frequencies, calculate the means of those frquencies and offset
-# it against the total word count
-
 
 def find_concordances(myDir):
     """Prints concordances of a chosen word, iterating alphabetically or randomly through the corpus"""
@@ -1444,6 +1449,27 @@ def cosine(myDir):
         main_menu(myDir)
     else:
         exit()
+
+
+
+# ----- UNDER CONSTRUCTION -----
+
+def discourse_freq(myDir):
+    """User enters 5 words, function calculates the mean of their relative frequencies"""
+    goOn = 0
+    while goOn == 0:
+        try:
+            wordList = input("Pick 5 words separated by space\nSTR>>> ").split(" ")
+            print("Using words: " + str(wordList))
+        except ValueError:
+            continue
+        goOn = 1
+    discourse = input("Give a name to the discourse (for graph output)\nSTR>>> ")
+
+    # Now replicate word find function but loop over all words in wordList, finally
+    # calculating means over relative frequencies and offset this against the total word count
+
+
 
 if __name__ == '__main__':
     main()
