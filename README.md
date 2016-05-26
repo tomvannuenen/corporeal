@@ -50,7 +50,7 @@ Stems all words per file. Fast, but less reliable than lemmatization. User selec
 * One .csv file in the root folder, based on the aggregate stemmed texts, containing the top 100 words; 
 * Multiple .txt files with the stemmed texts. These textt files (with their reduced inflectional word forms) may then be used as input for other functions. 
 
-<h4>POS tagging / filtering</h4>
+<h4>POS tagging </h4>
 POS tags all words per file. User selects output:
 * One .csv file in the root folder, based on the aggregate tagged texts, containing the top 100 words; 
 * Multiple .txt files with the tagged texts. These text files (with their reduced inflectional word forms) may then be used as input for other functions. 
@@ -81,6 +81,10 @@ User is asked for a word and whether to look for bi- or trigrams. The program se
 
 <h4>Distinctive words</h4>
 User is asked for a subcorpus name (e.g. "Austen"), output is a list of distinctive words for that subcorpus by comparing average rates of that word in that subcorpus vs. the entire corpus. The difference between these rates is calculated as distinctiveness. User can opt for a .csv file with these distinctive words. 
+
+<h4>Compare POS tags</h4>
+This function expects a POS-tagged folder as its input (use Corporeal's POS tagger). User then inputs a word, and the function compares the different parts of speech that this word appears in.
+
 
 ---- GRAPH OUTPUT ----
 
