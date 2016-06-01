@@ -83,7 +83,7 @@ def main_menu(myDir):
     [6]  Word count
     [7]  Top words 
     [8]  Concordances
-    [9]  Similar words (not functional yet)
+    [9]  Similar words (NOT FUNCTIONAL YET)
     [10] Top clusters (bi- or trigrams)
     [11] Distinctive words
     [12] Compare POS tags
@@ -493,8 +493,8 @@ def tagger(myDir):
         else:
             userFilter = input("Please try again!\nINT>>> ")
             continue
+    condStop = 0
     if condFilter == 1:
-        condStop = 0
         while condStop == 0:
             userStop = input("Remove stopwords?\nY/N>>> ").lower()
             if userStop == "yes" or userStop == "y":
@@ -512,7 +512,7 @@ def tagger(myDir):
         tokens = get_tokens(filePath)
         if condStop == 1:
             filtered = [w for w in tokens if not w in stopwords.words('english')]
-        elif condStop == 2:
+        else:
             filtered = tokens
         pos = nltk.pos_tag(filtered)
         posTokens = []
@@ -529,7 +529,7 @@ def tagger(myDir):
                     posTokens.append(''.join(tup))
         elif condFilter == 4:
             for tup in pos:
-                if tup[1] == "VB" or "VBN" or "VBP" or "VBD":
+                if tup[1] == "VB" or tup[1] == "VBN" or tup[1] == "VBP" or tup[1] == "VBD":
                     posTokens.append(''.join(tup))
         posText = ' '.join(posTokens) 
         totalPOSlist.append(pos)    
@@ -760,7 +760,7 @@ def top_words(myDir):
         else:
             userPOS = input("Please try again!\nINT>>> ")
     if posCond == 0:
-        allWords = [word for word in allWords if len(word) > 1]
+        allWords = [word for word in allWords]
     elif posCond == 1:
         print("Looking for nouns...")
         allWords = [word[:-2] for word in allWords if word[-2:] == "NN"]
